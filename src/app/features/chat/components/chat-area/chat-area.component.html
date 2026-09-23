@@ -1,0 +1,319 @@
+<div class="h-full flex flex-col w-full bg-[#f8f9fa] relative">
+  <!-- Header do Chat (Topo) -->
+  <div
+    class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200 shadow-sm shrink-0"
+  >
+    <div class="flex items-center gap-3">
+      <!-- Botão voltar no mobile -->
+      <button class="md:hidden text-gray-500 mr-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+      </button>
+
+      <div
+        class="w-10 h-10 rounded-full bg-green-50 text-green-700 border border-green-200 flex items-center justify-center font-bold text-sm"
+      >
+        {{ iniciais(selecionado?.nomeCliente) }}
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-bold text-gray-900">
+            {{ selecionado?.nomeCliente || 'Selecione um atendimento' }}
+          </h3>
+          <span
+            *ngIf="selecionado"
+            class="px-1.5 py-0.5 bg-green-100 text-green-800 text-[9px] font-bold rounded uppercase"
+            >{{ selecionado?.status }}</span
+          >
+        </div>
+        <p *ngIf="selecionado" class="text-xs text-gray-500 mt-0.5">
+          {{ selecionado?.telefoneCliente }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Botões de Ação Direita -->
+    <div class="flex items-center gap-2">
+      <div
+        class="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs text-gray-600 font-medium"
+      >
+        4/40m
+      </div>
+      <button
+        (click)="abrirTransferencia()"
+        class="p-1.5 bg-white border border-gray-200 rounded hover:bg-gray-50 text-gray-600 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          ></path>
+        </svg>
+      </button>
+      <button
+        class="px-3 py-1.5 bg-green-700 text-white rounded text-xs font-bold hover:bg-green-800 transition-colors shadow-sm"
+      >
+        Cerrar
+      </button>
+      <button
+        class="p-1.5 bg-white border border-gray-200 rounded hover:bg-gray-50 text-gray-600 hidden md:block"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+          ></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerta de Sistema WebSocket -->
+  <div
+    *ngIf="selecionado"
+    class="bg-green-50 border-b border-green-100 px-4 py-2 flex justify-between items-center shrink-0"
+  >
+    <div class="flex items-center gap-2 text-xs font-medium text-green-800">
+      <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+      Conexão WebSocket Ativa e Aguardando Mensagens
+    </div>
+    <button class="text-xs font-bold text-green-700 hover:text-green-900">Marcar como leído</button>
+  </div>
+
+  <!-- Container de Mensagens Dinâmicas -->
+  <div #areaMensagens class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4">
+    <!-- Estado vazio: nenhuma conversa selecionada -->
+    <div
+      *ngIf="!selecionado"
+      class="flex-1 flex flex-col items-center justify-center text-center gap-3"
+    >
+      <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 21l1.8-4A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
+      </div>
+      <div>
+        <p class="text-sm font-medium text-gray-500">Nenhuma conversa aberta</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          Selecione um atendimento na lista à esquerda para começar.
+        </p>
+      </div>
+    </div>
+
+    <!-- Aviso do Sistema -->
+    <div class="flex justify-center mb-2" *ngIf="selecionado">
+      <span
+        class="bg-white border border-gray-200 text-gray-500 text-[10px] font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5"
+      >
+        <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+        Sticky Session activa · {{ selecionado?.nomeCliente }}
+      </span>
+    </div>
+
+    <!-- O Angular vai repetir esta tag para CADA mensagem no array -->
+    <ng-container *ngFor="let msg of mensagens">
+      <!-- Se for RECEBIDA (CLIENTE) - Balão Branco à Esquerda -->
+      <div
+        *ngIf="msg.remetenteTipo === 'CLIENTE'"
+        class="flex flex-col self-start max-w-[85%] md:max-w-[65%]"
+      >
+        <div
+          class="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm border border-gray-100 text-sm text-gray-800"
+        >
+          {{ msg.conteudo }}
+          <div class="text-[10px] text-gray-400 text-right mt-1.5">{{ msg.hora }}</div>
+        </div>
+      </div>
+
+      <!-- Se for ENVIADA (VENDEDOR ou ADMIN) - Balão Verde à Direita -->
+      <div
+        *ngIf="msg.remetenteTipo !== 'CLIENTE'"
+        class="flex flex-col self-end max-w-[85%] md:max-w-[65%]"
+      >
+        <div
+          class="bg-[#e7f5eb] p-3.5 rounded-xl rounded-tr-sm shadow-sm border border-[#d1e8d7] text-sm text-gray-800"
+        >
+          {{ msg.conteudo }}
+          <div class="flex justify-end items-center gap-1 mt-1.5">
+            <span class="text-[10px] text-gray-500">{{ msg.hora }}</span>
+            <svg
+              class="w-3.5 h-3.5 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7M5 13l4 4L19 7"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Área de Input Dinâmica (Fundo) -->
+  <div *ngIf="selecionado" class="bg-white border-t border-gray-200 shrink-0 flex flex-col">
+    <!-- Chips (Respostas Rápidas) -->
+    <div class="px-4 pt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+      <button
+        (click)="usarRespostaRapida('Confirmo disponibilidad y te paso el presupuesto.')"
+        class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+      >
+        Confirmo disponibilidad y te paso el pre...
+      </button>
+      <button
+        (click)="usarRespostaRapida('Te envío la propuesta en unos minutos.')"
+        class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+      >
+        Te envío la propuesta en unos minutos.
+      </button>
+      <button
+        (click)="usarRespostaRapida('Entrega en 48 horas hábiles en tu zona.')"
+        class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+      >
+        Entrega en 48 horas hábiles en tu zona.
+      </button>
+    </div>
+
+    <!-- Input Field -->
+    <div class="p-3 flex items-center gap-3">
+      <button
+        class="text-gray-400 hover:text-green-600 border border-gray-200 rounded p-1.5 shrink-0 bg-gray-50"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- LIGAÇÃO BIDIRECIONAL COM O TYPESCRIPT -->
+      <input
+        type="text"
+        [(ngModel)]="mensagemDigitada"
+        (keyup.enter)="enviarMensagem()"
+        class="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 shadow-sm"
+        placeholder="Escribí un mensaje..."
+      />
+
+      <!-- BOTÃO DE ENVIO COM A FUNÇÃO DE CLIQUE -->
+      <button
+        (click)="enviarMensagem()"
+        class="bg-green-700 hover:bg-green-800 text-white rounded-lg px-5 py-2 text-sm font-bold transition-colors shadow-sm shrink-0"
+      >
+        Enviar
+      </button>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="px-4 pb-2 flex justify-between items-center text-[10px] text-gray-400">
+      <span>Se envía al WhatsApp del cliente desde el número central · +595 61 500 900</span>
+    </div>
+  </div>
+
+  <!-- Modal de Transferência -->
+  <div
+    *ngIf="modalAberto"
+    class="absolute inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+  >
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col max-h-[90%]">
+      <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-gray-900">Transferir atendimento</h3>
+        <button (click)="fecharTransferencia()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+      </div>
+
+      <div class="p-4 flex flex-col gap-3 overflow-y-auto">
+        <div>
+          <label class="text-xs font-medium text-gray-600">Setor</label>
+          <select
+            [(ngModel)]="setorTransferencia"
+            (ngModelChange)="carregarVendedores()"
+            class="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600"
+          >
+            <option value="Atacado">Atacado</option>
+            <option value="Varejo">Varejo</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-gray-600">Vendedor de destino</label>
+          <div class="mt-1 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto">
+            <div *ngIf="carregandoVendedores" class="p-3 text-sm text-gray-400 text-center">Carregando...</div>
+            <div *ngIf="!carregandoVendedores && vendedores.length === 0" class="p-3 text-sm text-gray-400 text-center">
+              Nenhum vendedor nesse setor.
+            </div>
+            <button
+              *ngFor="let v of vendedores"
+              (click)="destinoSelecionadoId = v.id"
+              class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50"
+              [class.bg-green-50]="destinoSelecionadoId === v.id"
+            >
+              <div>
+                <div class="text-sm font-medium text-gray-900">{{ v.nome }}</div>
+                <div class="text-[11px] text-gray-500">{{ v.setor }}</div>
+              </div>
+              <span class="text-[11px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                {{ v.quantidadeAtendimentos }} na fila
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-gray-600">Motivo (opcional)</label>
+          <input
+            type="text"
+            [(ngModel)]="motivo"
+            class="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600"
+            placeholder="Ex.: cliente é do setor de atacado"
+          />
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-gray-600">Nota interna (opcional)</label>
+          <input
+            type="text"
+            [(ngModel)]="notaInterna"
+            class="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600"
+            placeholder="Anotação para o histórico"
+          />
+        </div>
+      </div>
+
+      <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+        <button (click)="fecharTransferencia()" class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
+          Cancelar
+        </button>
+        <button
+          (click)="confirmarTransferencia()"
+          [disabled]="!destinoSelecionadoId || transferindo"
+          class="px-4 py-1.5 text-sm font-bold text-white bg-green-700 rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ transferindo ? 'Transferindo...' : 'Transferir' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

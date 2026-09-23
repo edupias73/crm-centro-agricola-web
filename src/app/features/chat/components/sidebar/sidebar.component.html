@@ -1,0 +1,85 @@
+<div class="flex flex-col h-full w-full bg-white">
+  <!-- Pesquisa -->
+  <div class="p-3 border-b border-gray-100">
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
+        </svg>
+      </div>
+      <input
+        type="text"
+        [(ngModel)]="termoBusca"
+        class="bg-gray-50 border border-gray-200 text-sm rounded-lg block w-full pl-9 p-2.5 focus:ring-1 focus:ring-green-500 focus:outline-none"
+        placeholder="Buscar cliente, teléfono o producto"
+      />
+    </div>
+  </div>
+
+  <!-- Abas (Tabs) -->
+  <div class="flex border-b border-gray-200 text-sm font-medium text-gray-500 px-2">
+    <button class="px-3 py-3 border-b-2 border-gray-800 text-gray-900 font-bold whitespace-nowrap">
+      Mis atenciones <span class="ml-1 text-gray-900 font-bold">{{ atendimentos.length }}</span>
+    </button>
+    <button class="px-3 py-3 border-b-2 border-transparent hover:text-gray-700 whitespace-nowrap">
+      En la fila <span class="ml-1 text-gray-400">3</span>
+    </button>
+    <button class="px-3 py-3 border-b-2 border-transparent hover:text-gray-700 whitespace-nowrap">
+      Cerrados <span class="ml-1 text-gray-400">1</span>
+    </button>
+  </div>
+
+  <!-- Lista de Chats (Scroll) -->
+  <div class="flex-1 overflow-y-auto">
+    @if (carregando) {
+      <div class="p-4 text-sm text-gray-400 text-center">Carregando atendimentos...</div>
+    } @else if (erro) {
+      <div class="p-4 text-sm text-red-500 text-center">
+        Não foi possível carregar. Faça login e tente de novo.
+      </div>
+    } @else if (atendimentos.length === 0) {
+      <div class="p-6 text-sm text-gray-400 text-center">Nenhum atendimento no momento.</div>
+    } @else if (atendimentosFiltrados.length === 0) {
+      <div class="p-6 text-sm text-gray-400 text-center">Nenhum resultado para a busca.</div>
+    } @else {
+      @for (item of atendimentosFiltrados; track item.id) {
+        <div
+          (click)="abrir(item)"
+          class="flex items-start p-3 hover:bg-gray-50 border-l-4 border-b border-gray-50"
+          [class.bg-green-50]="selecionadoId === item.id"
+          [class.border-green-600]="selecionadoId === item.id"
+          [class.border-transparent]="selecionadoId !== item.id"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-green-800 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm mr-3"
+          >
+            {{ iniciais(item.nomeCliente) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-center mb-0.5">
+              <h4 class="text-sm font-bold text-gray-900 truncate">{{ item.nomeCliente }}</h4>
+              <span class="text-xs text-gray-400">{{ hora(item.ultimaInteracao) }}</span>
+            </div>
+            <p class="text-xs text-gray-500 truncate mb-1.5">{{ item.telefoneCliente }}</p>
+            <span
+              class="px-1.5 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded uppercase"
+            >{{ item.status }}</span>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Rodapé Sidebar -->
+  <div
+    class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-500 flex items-center gap-1.5"
+  >
+    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+    Sticky Session activa · SLA 40 min
+  </div>
+</div>

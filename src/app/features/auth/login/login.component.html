@@ -1,0 +1,117 @@
+<div class="min-h-screen flex flex-col md:flex-row font-sans bg-brand-bg">
+  <!-- LADO ESQUERDO: Branding (Verde) -->
+  <div
+    class="w-full md:w-1/2 bg-[#0a3a2a] p-10 md:p-16 flex flex-col justify-between text-white relative overflow-hidden"
+  >
+    <!-- Efeito visual de fundo (os círculos do mockup) -->
+    <div
+      class="absolute -bottom-24 -right-24 w-96 h-96 border-[1px] border-white/10 rounded-full"
+    ></div>
+    <div
+      class="absolute -bottom-10 -right-10 w-64 h-64 border-[1px] border-white/10 rounded-full"
+    ></div>
+
+    <!-- Header / Logo Textual -->
+    <div class="z-10 mt-8">
+      <span class="text-yellow-500 font-bold tracking-widest text-xs uppercase mb-4 block"
+        >Plataforma Interna</span
+      >
+      <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">
+        Atención por WhatsApp,<br />ordenada en un solo lugar
+      </h1>
+      <p class="text-gray-300 text-lg md:text-xl max-w-md">
+        Un número central, distribución automática y todo el equipo comercial respondiendo desde el
+        mismo CRM. Ciudad del Este, Paraguay.
+      </p>
+    </div>
+
+    <!-- Features Bottom -->
+    <div class="z-10 grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 md:mt-0">
+      <div>
+        <h3 class="font-bold text-lg">Tiempo real</h3>
+        <p class="text-gray-400 text-sm">WebSocket activo</p>
+      </div>
+      <div>
+        <h3 class="font-bold text-lg">Sticky</h3>
+        <p class="text-gray-400 text-sm">Cliente con su vendedor</p>
+      </div>
+      <div>
+        <h3 class="font-bold text-lg">1 número</h3>
+        <p class="text-gray-400 text-sm">WhatsApp central</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LADO DIREITO: Card de Login (Branco) -->
+  <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-10 relative">
+    <!-- Card Branco Centralizado -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-10 flex flex-col items-center">
+      <!-- Placeholder da Logo -->
+      <div
+        class="w-24 h-24 bg-gray-100 rounded-full mb-6 flex items-center justify-center text-4xl"
+      >
+        🚜
+      </div>
+
+      <h2 class="text-2xl font-bold text-brand-text mb-2">Bienvenido</h2>
+      <p class="text-brand-gray text-center text-sm mb-8">
+        Ingresá tus credenciales corporativas para acceder.
+      </p>
+
+      <!-- Formulário de Login -->
+      <form (ngSubmit)="fazerLogin()" class="w-full flex flex-col gap-5 mb-8">
+        <!-- Campo E-mail -->
+        <div class="w-full">
+          <label class="block text-sm font-semibold text-brand-text mb-1">Correo electrónico</label>
+          <input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="Usuario@centroagricola.com"
+            required
+            class="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition"
+          />
+        </div>
+
+        <!-- Campo Senha -->
+        <div class="w-full">
+          <label class="block text-sm font-semibold text-brand-text mb-1">Contraseña</label>
+          <input
+            type="password"
+            [(ngModel)]="senha"
+            name="senha"
+            placeholder="••••••••"
+            required
+            class="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition"
+          />
+        </div>
+
+        <!-- Mensagem de erro -->
+        @if (erro) {
+          <div
+            class="w-full bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-3 py-2 text-center"
+          >
+            {{ erro }}
+          </div>
+        }
+
+        <!-- Botão de Acesso -->
+        <button
+          type="submit"
+          [disabled]="entrando"
+          class="w-full bg-brand-green text-white font-bold py-3 mt-2 rounded-lg hover:bg-brand-dark transition shadow-lg shadow-brand-green/30 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {{ entrando ? 'Entrando…' : 'Iniciar sesión' }}
+        </button>
+      </form>
+
+      <!-- Footer do Card -->
+      <div class="text-xs text-brand-green flex items-center gap-2">
+        <div class="w-1.5 h-1.5 bg-brand-green rounded-full"></div>
+        Acceso seguro · sesión cifrada JWT
+      </div>
+    </div>
+
+    <div class="absolute bottom-6 text-xs text-gray-400">Centro Agrícola · Ciudad del Este</div>
+  </div>
+</div>
