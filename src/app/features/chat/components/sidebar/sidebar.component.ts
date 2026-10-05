@@ -1,21 +1,16 @@
 import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { API_CONFIG } from '../../../../api.config';
-import { AtendimentoService } from '../../../../atendimento.service';
-
-interface Atendimento {
-  id: number;
-  nomeCliente: string;
-  telefoneCliente: string;
-  status: string;
-  ultimaInteracao: string;
-}
+import { AtendimentoService, AtendimentoResumo } from '../../../../atendimento.service';
+import { WebsocketService } from '../../../../websocket.service';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
@@ -24,8 +19,14 @@ export class SidebarComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
   private cdr = inject(ChangeDetectorRef);
   private atendimentoService = inject(AtendimentoService);
+  private wsService = inject(WebsocketService);
 
-  atendimentos: Atendimento[] = [];
+  abaAtiva: 'MEUS' | 'FILA' | 'FECHADOS' = 'MEUS';
+
+  meusAtendimentos: AtendimentoResumo[] = [];
+  filaAtendimentos: AtendimentoResumo[] = [];
+  fechadosAtendimentos: AtendimentoResumo[] = [];
+
   carregando = true;
   erro = false;
   selecionadoId: number | null = null;
@@ -33,44 +34,70 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit() {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.carregar();
-    this.atendimentoService.recarregar$.subscribe(() => this.carregar());
+
+    this.carregar(true);
+
+    // Recarrega silenciosamente quando uma ação ocorre (envio, transferência, fecho)
+    this.atendimentoService.recarregar$.subscribe(() => this.carregar(false));
+
+    // Recarrega silenciosamente quando chega mensagem nova via WebSocket
+    this.wsService.mensagens$.subscribe(() => this.carregar(false));
   }
 
-  carregar() {
-    this.carregando = true;
+  mudarAba(aba: 'MEUS' | 'FILA' | 'FECHADOS') {
+    this.abaAtiva = aba;
+    this.cdr.detectChanges();
+  }
+
+  carregar(mostrarLoading = false) {
+    if (mostrarLoading) {
+      this.carregando = true;
+    }
     this.erro = false;
     this.cdr.detectChanges();
 
-    this.http
-      .get<Atendimento[]>(`${API_CONFIG.baseUrl}/api/atendimentos/meus`)
-      .subscribe({
-        next: (lista) => {
-          this.atendimentos = lista;
-          this.carregando = false;
-          this.cdr.detectChanges();
-        },
-        error: (e) => {
-          console.error('Erro ao carregar atendimentos', e);
-          this.erro = true;
-          this.carregando = false;
-          this.cdr.detectChanges();
-        },
-      });
+    const base = API_CONFIG.baseUrl;
+
+    forkJoin({
+      meus: this.http.get<AtendimentoResumo[]>(`${base}/api/atendimentos/meus`),
+      fila: this.http.get<AtendimentoResumo[]>(`${base}/api/atendimentos/fila`),
+      fechados: this.http.get<AtendimentoResumo[]>(`${base}/api/atendimentos/fechados`),
+    }).subscribe({
+      next: ({ meus, fila, fechados }) => {
+        this.meusAtendimentos = meus;
+        this.filaAtendimentos = fila;
+        this.fechadosAtendimentos = fechados;
+        this.carregando = false;
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        console.error('Erro ao carregar atendimentos', e);
+        this.erro = true;
+        this.carregando = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
-  // Lista filtrada pelo que o usuário digita na busca (nome ou telefone)
-  get atendimentosFiltrados(): Atendimento[] {
+  get listaDaAbaAtual(): AtendimentoResumo[] {
+    if (this.abaAtiva === 'FILA') return this.filaAtendimentos;
+    if (this.abaAtiva === 'FECHADOS') return this.fechadosAtendimentos;
+    return this.meusAtendimentos;
+  }
+
+  get atendimentosFiltrados(): AtendimentoResumo[] {
+    const lista = this.listaDaAbaAtual;
     const termo = this.termoBusca.trim().toLowerCase();
-    if (!termo) return this.atendimentos;
-    return this.atendimentos.filter(
+    if (!termo) return lista;
+
+    return lista.filter(
       (a) =>
         a.nomeCliente?.toLowerCase().includes(termo) ||
         a.telefoneCliente?.toLowerCase().includes(termo),
     );
   }
 
-  abrir(item: Atendimento) {
+  abrir(item: AtendimentoResumo) {
     this.selecionadoId = item.id;
     this.atendimentoService.selecionar(item);
   }

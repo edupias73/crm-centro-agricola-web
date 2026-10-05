@@ -8,28 +8,23 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const platformId = inject(PLATFORM_ID);
   const router = inject(Router);
   const noNavegador = isPlatformBrowser(platformId);
+  const ehRotaPublica = req.url.includes('/api/auth/login');
 
-  // Carimba o token na saída (só no navegador)
-  if (noNavegador) {
+  if (noNavegador && !ehRotaPublica) {
     const token = localStorage.getItem('token');
     if (token) {
       req = req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` },
+        setHeaders: { Authorization: `Bearer ${token.trim()}` },
       });
     }
   }
 
   return next(req).pipe(
     catchError((erro: HttpErrorResponse) => {
-      // O login trata os próprios erros; não mexemos nele aqui
-      const ehLogin = req.url.includes('/api/auth/login');
-
-      // Token vencido ou inválido -> desloga e volta pro login
-      if (noNavegador && !ehLogin && (erro.status === 401 || erro.status === 403)) {
+      if (noNavegador && !ehRotaPublica && erro.status === 401) {
         localStorage.removeItem('token');
         router.navigate(['/login']);
       }
-
       return throwError(() => erro);
     }),
   );

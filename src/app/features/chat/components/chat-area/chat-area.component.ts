@@ -15,7 +15,9 @@ import { AtendimentoService, AtendimentoResumo } from '../../../../atendimento.s
 import { API_CONFIG } from '../../../../api.config';
 
 interface MensagemView {
+  id?: number;
   remetenteTipo: string;
+  tipoMensagem?: string;
   conteudo: string;
   hora: string;
 }
@@ -45,6 +47,8 @@ export class ChatAreaComponent implements OnInit {
   selecionado: AtendimentoResumo | null = null;
   mensagens: MensagemView[] = [];
   mensagemDigitada = '';
+  enviando = false;
+  fechando = false;
 
   // --- Transferência ---
   modalAberto = false;
@@ -67,13 +71,21 @@ export class ChatAreaComponent implements OnInit {
       if (!this.selecionado || idDaConversa !== this.selecionado.id) {
         return;
       }
+
+      if (novaMensagem.id && this.mensagens.some((m) => m.id === novaMensagem.id)) {
+        return;
+      }
+
       this.mensagens.push({
+        id: novaMensagem.id,
         remetenteTipo: novaMensagem.remetenteTipo,
+        tipoMensagem: novaMensagem.tipoMensagem,
         conteudo: novaMensagem.conteudo,
         hora: novaMensagem.criadoEm
           ? this.formatarHora(novaMensagem.criadoEm)
           : this.horaAgora(),
       });
+
       this.cdr.detectChanges();
       this.scrollParaBaixo();
     });
@@ -87,7 +99,9 @@ export class ChatAreaComponent implements OnInit {
       .subscribe({
         next: (lista) => {
           this.mensagens = lista.map((m) => ({
+            id: m.id,
             remetenteTipo: m.remetenteTipo,
+            tipoMensagem: m.tipoMensagem,
             conteudo: m.conteudo,
             hora: this.formatarHora(m.criadoEm),
           }));
@@ -103,18 +117,76 @@ export class ChatAreaComponent implements OnInit {
   }
 
   enviarMensagem() {
-    if (!this.mensagemDigitada.trim()) return;
-    this.mensagens.push({
-      remetenteTipo: 'VENDEDOR',
-      conteudo: this.mensagemDigitada,
-      hora: this.horaAgora(),
-    });
+    const texto = this.mensagemDigitada.trim();
+    if (!texto || !this.selecionado || this.enviando) return;
+
+    this.enviando = true;
+    const atendimentoId = this.selecionado.id;
+    const payload = {
+      conteudo: texto,
+      tipoMensagem: 'TEXTO',
+    };
+
     this.mensagemDigitada = '';
-    this.cdr.detectChanges();
-    this.scrollParaBaixo();
+
+    this.http
+      .post<any>(`${API_CONFIG.baseUrl}/api/atendimentos/${atendimentoId}/mensagens`, payload)
+      .subscribe({
+        next: (msgSalva) => {
+          if (!this.mensagens.some((m) => m.id === msgSalva.id)) {
+            this.mensagens.push({
+              id: msgSalva.id,
+              remetenteTipo: msgSalva.remetenteTipo,
+              tipoMensagem: msgSalva.tipoMensagem,
+              conteudo: msgSalva.conteudo,
+              hora: msgSalva.criadoEm ? this.formatarHora(msgSalva.criadoEm) : this.horaAgora(),
+            });
+          }
+          if (this.selecionado && this.selecionado.status !== 'ABERTO') {
+            this.selecionado.status = 'ABERTO';
+          }
+          this.enviando = false;
+          this.atendimentoService.recarregarLista();
+          this.cdr.detectChanges();
+          this.scrollParaBaixo();
+        },
+        error: (e) => {
+          console.error('Erro ao enviar mensagem:', e);
+          this.mensagemDigitada = texto;
+          this.enviando = false;
+          this.cdr.detectChanges();
+          alert('Não foi possível enviar a mensagem. Verifique sua conexão.');
+        },
+      });
   }
 
-  // Preenche o campo de mensagem com uma resposta rápida
+  fecharAtendimento() {
+    if (!this.selecionado || this.fechando || this.selecionado.status === 'FECHADO') return;
+
+    this.fechando = true;
+    const id = this.selecionado.id;
+
+    this.http
+      .post(`${API_CONFIG.baseUrl}/api/atendimentos/${id}/fechar`, {}, { responseType: 'text' })
+      .subscribe({
+        next: () => {
+          this.fechando = false;
+          if (this.selecionado) {
+            this.selecionado.status = 'FECHADO';
+          }
+          this.carregarHistorico(id);
+          this.atendimentoService.recarregarLista();
+          this.cdr.detectChanges();
+        },
+        error: (e) => {
+          console.error('Erro ao fechar atendimento:', e);
+          this.fechando = false;
+          this.cdr.detectChanges();
+          alert('Não foi possível encerrar o atendimento.');
+        },
+      });
+  }
+
   usarRespostaRapida(texto: string) {
     this.mensagemDigitada = texto;
   }
@@ -195,7 +267,6 @@ export class ChatAreaComponent implements OnInit {
 
   private scrollParaBaixo() {
     if (!isPlatformBrowser(this.platformId)) return;
-    // Espera o DOM desenhar as mensagens novas antes de rolar
     setTimeout(() => {
       const el = this.areaMensagens?.nativeElement;
       if (el) el.scrollTop = el.scrollHeight;

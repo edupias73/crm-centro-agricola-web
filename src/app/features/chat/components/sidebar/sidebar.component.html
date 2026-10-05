@@ -21,16 +21,39 @@
     </div>
   </div>
 
-  <!-- Abas (Tabs) -->
+  <!-- Abas (Tabs Dinâmicas) -->
   <div class="flex border-b border-gray-200 text-sm font-medium text-gray-500 px-2">
-    <button class="px-3 py-3 border-b-2 border-gray-800 text-gray-900 font-bold whitespace-nowrap">
-      Mis atenciones <span class="ml-1 text-gray-900 font-bold">{{ atendimentos.length }}</span>
+    <button
+      (click)="mudarAba('MEUS')"
+      [ngClass]="abaAtiva === 'MEUS' ? 'border-gray-800 text-gray-900 font-bold' : 'border-transparent hover:text-gray-700'"
+      class="px-3 py-3 border-b-2 whitespace-nowrap transition-colors"
+    >
+      Mis atenciones
+      <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'MEUS' ? 'text-gray-900' : 'text-gray-400'">
+        {{ meusAtendimentos.length }}
+      </span>
     </button>
-    <button class="px-3 py-3 border-b-2 border-transparent hover:text-gray-700 whitespace-nowrap">
-      En la fila <span class="ml-1 text-gray-400">3</span>
+
+    <button
+      (click)="mudarAba('FILA')"
+      [ngClass]="abaAtiva === 'FILA' ? 'border-gray-800 text-gray-900 font-bold' : 'border-transparent hover:text-gray-700'"
+      class="px-3 py-3 border-b-2 whitespace-nowrap transition-colors"
+    >
+      En la fila
+      <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'FILA' ? 'text-gray-900' : 'text-gray-400'">
+        {{ filaAtendimentos.length }}
+      </span>
     </button>
-    <button class="px-3 py-3 border-b-2 border-transparent hover:text-gray-700 whitespace-nowrap">
-      Cerrados <span class="ml-1 text-gray-400">1</span>
+
+    <button
+      (click)="mudarAba('FECHADOS')"
+      [ngClass]="abaAtiva === 'FECHADOS' ? 'border-gray-800 text-gray-900 font-bold' : 'border-transparent hover:text-gray-700'"
+      class="px-3 py-3 border-b-2 whitespace-nowrap transition-colors"
+    >
+      Cerrados
+      <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'FECHADOS' ? 'text-gray-900' : 'text-gray-400'">
+        {{ fechadosAtendimentos.length }}
+      </span>
     </button>
   </div>
 
@@ -42,15 +65,15 @@
       <div class="p-4 text-sm text-red-500 text-center">
         Não foi possível carregar. Faça login e tente de novo.
       </div>
-    } @else if (atendimentos.length === 0) {
-      <div class="p-6 text-sm text-gray-400 text-center">Nenhum atendimento no momento.</div>
+    } @else if (listaDaAbaAtual.length === 0) {
+      <div class="p-6 text-sm text-gray-400 text-center">Nenhum atendimento nesta aba.</div>
     } @else if (atendimentosFiltrados.length === 0) {
       <div class="p-6 text-sm text-gray-400 text-center">Nenhum resultado para a busca.</div>
     } @else {
       @for (item of atendimentosFiltrados; track item.id) {
         <div
           (click)="abrir(item)"
-          class="flex items-start p-3 hover:bg-gray-50 border-l-4 border-b border-gray-50"
+          class="flex items-start p-3 hover:bg-gray-50 border-l-4 border-b border-gray-50 cursor-pointer"
           [class.bg-green-50]="selecionadoId === item.id"
           [class.border-green-600]="selecionadoId === item.id"
           [class.border-transparent]="selecionadoId !== item.id"
@@ -67,7 +90,12 @@
             </div>
             <p class="text-xs text-gray-500 truncate mb-1.5">{{ item.telefoneCliente }}</p>
             <span
-              class="px-1.5 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded uppercase"
+              class="px-1.5 py-0.5 text-[10px] font-bold rounded uppercase"
+              [ngClass]="{
+                'bg-green-100 text-green-800': item.status === 'ABERTO',
+                'bg-red-100 text-red-800': item.status === 'ATRASADO',
+                'bg-gray-100 text-gray-600': item.status === 'FECHADO'
+              }"
             >{{ item.status }}</span>
           </div>
         </div>
