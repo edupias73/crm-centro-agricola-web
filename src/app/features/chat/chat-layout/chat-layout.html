@@ -5,36 +5,57 @@
   >
     <!-- Esquerda: Logo e Menus -->
     <div class="flex items-center h-full">
-      <div class="flex items-center gap-2 mr-8">
-        <!-- Ícone placeholder para o logo -->
+      <div class="flex items-center gap-2 mr-4 md:mr-8">
         <div
           class="w-8 h-8 bg-green-100 rounded flex items-center justify-center text-green-700 font-bold text-xs"
         >
           CA
         </div>
-        <span class="font-bold text-sm hidden md:block">Centro Agrícola</span>
+        <span class="font-bold text-sm hidden sm:block">Centro Agrícola</span>
       </div>
 
-      <nav class="hidden md:flex h-full">
-        <a
-          href="#"
-          class="flex items-center px-4 h-full border-b-2 border-green-600 text-green-700 font-bold text-sm"
-          >Mis atenciones</a
+      <nav class="flex h-full">
+        <button
+          (click)="irParaAtenciones()"
+          [ngClass]="
+            abaSuperior === 'ATENCIONES'
+              ? 'border-green-600 text-green-700 font-bold'
+              : 'border-transparent text-gray-500 hover:text-gray-900 font-medium'
+          "
+          class="flex items-center px-3 md:px-4 h-full border-b-2 text-xs md:text-sm transition-colors"
         >
-        <a
-          href="#"
-          class="flex items-center px-4 h-full text-gray-500 hover:text-gray-900 font-medium text-sm transition-colors"
-          >Mis clientes</a
+          Mis atenciones
+        </button>
+        <button
+          (click)="irParaClientes()"
+          [ngClass]="
+            abaSuperior === 'CLIENTES'
+              ? 'border-green-600 text-green-700 font-bold'
+              : 'border-transparent text-gray-500 hover:text-gray-900 font-medium'
+          "
+          class="flex items-center px-3 md:px-4 h-full border-b-2 text-xs md:text-sm transition-colors"
         >
+          Mis clientes
+        </button>
       </nav>
     </div>
 
-    <!-- Direita: Perfil e Configurações -->
-    <div class="flex items-center gap-4">
+    <!-- Direita: Perfil, Idioma, Tela Cheia e Salir -->
+    <div class="flex items-center gap-3">
+      @if (usuarioPerfil === 'ADMIN') {
+        <button
+          (click)="voltarAoAdmin()"
+          class="px-2.5 py-1 text-xs font-bold bg-green-50 text-green-800 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+        >
+          Panel Admin
+        </button>
+      }
+
       <div class="hidden md:flex flex-col text-right">
         <span class="text-sm font-bold leading-tight text-gray-900">{{ usuarioNome }}</span>
         <span class="text-[11px] text-gray-500">{{ usuarioPerfil }}</span>
       </div>
+
       <div
         class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center font-bold text-xs shadow-sm"
       >
@@ -43,6 +64,7 @@
 
       <div class="h-6 w-px bg-gray-300 hidden md:block"></div>
 
+      <!-- Botões de Idioma ES / PT -->
       <div class="hidden md:flex items-center gap-1">
         <button
           class="px-2 py-1 text-xs font-bold bg-gray-100 rounded text-gray-700 border border-gray-200"
@@ -54,8 +76,18 @@
         </button>
       </div>
 
-      <button class="text-gray-400 hover:text-gray-600 hidden md:block">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- BOTÃO TELA CHEIA (Ao lado de ES/PT e Salir, igual ao Mockup) -->
+      <button
+        (click)="toggleTelaCheia()"
+        title="Modo tela cheia"
+        [ngClass]="
+          emTelaCheia
+            ? 'text-green-700 bg-green-50 border-green-300'
+            : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50 border-gray-200'
+        "
+        class="p-1.5 border rounded-lg transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -65,41 +97,162 @@
         </svg>
       </button>
 
-      <button (click)="sair()" class="text-sm font-medium text-gray-500 hover:text-gray-900">Salir</button>
+      <button
+        (click)="sair()"
+        class="text-xs md:text-sm font-medium text-gray-500 hover:text-gray-900"
+      >
+        Salir
+      </button>
 
       <!-- Botão Menu Mobile -->
-      <button (click)="toggleMenu()" class="md:hidden text-gray-500">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16"
-          ></path>
-        </svg>
-      </button>
+      @if (abaSuperior === 'ATENCIONES') {
+        <button (click)="toggleMenu()" class="md:hidden text-gray-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
+        </button>
+      }
     </div>
   </header>
 
-  <!-- CORPO PRINCIPAL -->
-  <div class="flex flex-1 overflow-hidden relative">
-    <!-- Overlay Mobile -->
-    <div
-      *ngIf="menuMobileAberto"
-      (click)="toggleMenu()"
-      class="absolute inset-0 bg-black/50 z-30 md:hidden"
-    ></div>
+  <!-- CORPO 1: MIS ATENCIONES (CHAT) -->
+  @if (abaSuperior === 'ATENCIONES') {
+    <div class="flex flex-1 overflow-hidden relative">
+      <div
+        *ngIf="menuMobileAberto"
+        (click)="toggleMenu()"
+        class="absolute inset-0 bg-black/50 z-30 md:hidden"
+      ></div>
 
-    <!-- Barra Lateral -->
-    <app-sidebar
-      class="absolute md:relative z-40 h-full w-80 md:w-80 lg:w-[350px] bg-white border-r border-gray-200 transform transition-transform duration-300 md:translate-x-0 flex flex-col shrink-0"
-      [ngClass]="menuMobileAberto ? 'translate-x-0' : '-translate-x-full'"
-    >
-    </app-sidebar>
+      <app-sidebar
+        class="absolute md:relative z-40 h-full w-80 md:w-80 lg:w-[350px] bg-white border-r border-gray-200 transform transition-transform duration-300 md:translate-x-0 flex flex-col shrink-0"
+        [ngClass]="menuMobileAberto ? 'translate-x-0' : '-translate-x-full'"
+      >
+      </app-sidebar>
 
-    <!-- Área de Chat -->
-    <main class="flex-1 min-w-0 h-full bg-[#f8f9fa] flex flex-col">
-      <app-chat-area class="flex-1 flex flex-col h-full"></app-chat-area>
-    </main>
-  </div>
+      <main class="flex-1 min-w-0 h-full bg-[#f8f9fa] flex flex-col">
+        <app-chat-area class="flex-1 flex flex-col h-full"></app-chat-area>
+      </main>
+    </div>
+  }
+
+  <!-- CORPO 2: MIS CLIENTES (CARTEIRA DO VENDEDOR) -->
+  @if (abaSuperior === 'CLIENTES') {
+    <div class="flex-1 overflow-y-auto bg-[#f8f9fa] p-4 md:p-8">
+      <div class="max-w-5xl mx-auto">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Mi Cartera</p>
+            <h1 class="text-2xl font-bold text-gray-900">Mis clientes ({{ clientes.length }})</h1>
+            <p class="text-sm text-gray-500 mt-0.5">
+              Clientes vinculados a tus atenciones en WhatsApp.
+            </p>
+          </div>
+
+          <div class="w-full sm:w-72">
+            <input
+              type="text"
+              [(ngModel)]="buscaCliente"
+              placeholder="Buscar por nombre o teléfono..."
+              class="w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+            />
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          @if (carregandoClientes) {
+            <div class="p-8 text-center text-sm text-gray-400">Cargando cartera de clientes...</div>
+          } @else if (clientesFiltrados.length === 0) {
+            <div class="p-8 text-center text-sm text-gray-400">
+              Ningún cliente encontrado en tu cartera.
+            </div>
+          } @else {
+            <div class="divide-y divide-gray-100">
+              @for (c of clientesFiltrados; track c.clienteId) {
+                <div
+                  class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div
+                      class="w-10 h-10 rounded-full bg-green-800 text-white flex items-center justify-center font-bold text-sm shrink-0"
+                    >
+                      {{ iniciais(c.nome) }}
+                    </div>
+
+                    <div class="min-w-0 flex-1">
+                      @if (editandoId === c.clienteId) {
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="text"
+                            [(ngModel)]="novoNomeTemp"
+                            (keyup.enter)="salvarNomeCliente(c)"
+                            class="border border-green-600 rounded px-2.5 py-1 text-sm text-gray-900 focus:outline-none"
+                          />
+                          <button
+                            (click)="salvarNomeCliente(c)"
+                            [disabled]="salvandoNome"
+                            class="px-2.5 py-1 bg-green-700 text-white text-xs font-bold rounded hover:bg-green-800"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            (click)="cancelarEdicaoNome()"
+                            class="px-2 py-1 text-xs text-gray-500 hover:text-gray-800"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="flex items-center gap-2">
+                          <h3 class="text-sm font-bold text-gray-900 truncate">{{ c.nome }}</h3>
+                          <button
+                            (click)="iniciarEdicaoNome(c)"
+                            title="Editar nombre del cliente"
+                            class="text-xs text-gray-400 hover:text-green-700"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      }
+                      <p class="text-xs text-gray-500 mt-0.5">{{ c.telefone }}</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between sm:justify-end gap-4">
+                    <div class="text-left sm:text-right">
+                      <span
+                        class="px-2 py-0.5 text-[10px] font-bold rounded uppercase"
+                        [ngClass]="{
+                          'bg-green-100 text-green-800': c.statusUltimoAtendimento === 'ABERTO',
+                          'bg-red-100 text-red-800': c.statusUltimoAtendimento === 'ATRASADO',
+                          'bg-gray-100 text-gray-600': c.statusUltimoAtendimento === 'FECHADO'
+                        }"
+                      >
+                        {{ c.statusUltimoAtendimento }}
+                      </span>
+                      <p class="text-[11px] text-gray-400 mt-1">
+                        Último: {{ formatarData(c.ultimoContato) }} · {{ c.totalAtendimentos }} conv.
+                      </p>
+                    </div>
+
+                    <button
+                      (click)="abrirChatDoCliente(c)"
+                      class="px-3.5 py-2 bg-green-700 hover:bg-green-800 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shrink-0"
+                    >
+                      Abrir chat
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>
