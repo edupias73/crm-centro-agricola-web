@@ -23,6 +23,18 @@ interface MensagemView {
   hora: string;
 }
 
+interface PageSpring<T> {
+  content: T[];
+  last: boolean;
+  number: number;
+}
+
+interface CacheConversa {
+  mensagens: MensagemView[];
+  pagina: number;
+  ultima: boolean;
+}
+
 interface VendedorCarga {
   id: number;
   nome: string;
@@ -73,8 +85,11 @@ export class ChatAreaComponent implements OnInit {
   enviando = false;
   fechando = false;
 
-  // Cache em memória para troca instantânea (0ms) entre conversas
-  private cacheMensagens = new Map<number, MensagemView[]>();
+  // --- Paginação e Cache ---
+  paginaAtual = 0;
+  ultimaPagina = false;
+  carregandoMais = false;
+  private cacheConversas = new Map<number, CacheConversa>();
   private cacheFichas = new Map<number, FichaCliente>();
 
   // --- Ficha do Cliente ---
@@ -99,18 +114,25 @@ export class ChatAreaComponent implements OnInit {
       this.selecionado = atendimento;
       this.editandoFicha = false;
 
-      // Se já estiver em cache, mostra na tela em 0ms enquanto sincroniza em background
-      const emCache = this.cacheMensagens.get(atendimento.id);
+      const emCache = this.cacheConversas.get(atendimento.id);
       if (emCache) {
-        this.mensagens = [...emCache];
+        this.mensagens = [...emCache.mensagens];
+        this.paginaAtual = emCache.pagina;
+        this.ultimaPagina = emCache.ultima;
         this.cdr.detectChanges();
         this.scrollParaBaixo();
       } else {
         this.mensagens = [];
+        this.paginaAtual = 0;
+        this.ultimaPagina = false;
         this.cdr.detectChanges();
       }
 
-      this.carregarHistorico(atendimento.id);
+      // Dispara do zero apenas se não houver cache
+      if (!emCache) {
+        this.carregarHistoricoPaginado(atendimento.id, 0);
+      }
+      
       if (this.fichaAberta) {
         this.carregarFicha(atendimento.id);
       }
@@ -118,7 +140,6 @@ export class ChatAreaComponent implements OnInit {
 
     this.wsService.mensagens$.subscribe((novaMensagem: any) => {
       this.zone.run(() => {
-        // Suporta tanto o DTO rápido (atendimentoId) quanto a entidade antiga (atendimento.id)
         const idDaConversa = novaMensagem?.atendimentoId ?? novaMensagem?.atendimento?.id;
         if (!idDaConversa) return;
 
@@ -132,7 +153,6 @@ export class ChatAreaComponent implements OnInit {
             : this.horaAgora(),
         };
 
-        // Se a conversa estiver aberta na tela agora, adiciona ao vivo
         if (this.selecionado && idDaConversa === this.selecionado.id) {
           const jaExiste =
             (novaMensagem.id && this.mensagens.some((m) => m.id === novaMensagem.id)) ||
@@ -145,20 +165,87 @@ export class ChatAreaComponent implements OnInit {
 
           if (!jaExiste) {
             this.mensagens.push(novaView);
-            this.cacheMensagens.set(idDaConversa, [...this.mensagens]);
+            this.atualizarCache(idDaConversa);
             this.cdr.detectChanges();
             this.scrollParaBaixo();
           }
         } else {
-          // Atualiza o cache mesmo se o vendedor estiver olhando outra conversa
-          const listaCache = this.cacheMensagens.get(idDaConversa);
-          if (listaCache && !listaCache.some((m) => m.id === novaMensagem.id)) {
-            listaCache.push(novaView);
+          const cacheData = this.cacheConversas.get(idDaConversa);
+          if (cacheData && !cacheData.mensagens.some((m) => m.id === novaMensagem.id)) {
+            cacheData.mensagens.push(novaView);
           }
         }
       });
     });
   }
+
+  // --- LÓGICA DE PAGINAÇÃO E SCROLL ---
+  
+  aoRolarChat(event: any) {
+    const el = event.target as HTMLElement;
+    // Se chegou perto do topo, tenta carregar as mensagens antigas
+    if (el.scrollTop < 50 && !this.ultimaPagina && !this.carregandoMais && this.selecionado) {
+      this.carregarHistoricoPaginado(this.selecionado.id, this.paginaAtual + 1);
+    }
+  }
+
+  private carregarHistoricoPaginado(id: number, page: number) {
+    if (!isPlatformBrowser(this.platformId) || this.carregandoMais) return;
+    this.carregandoMais = true;
+
+    this.http
+      .get<PageSpring<any>>(`${API_CONFIG.baseUrl}/api/atendimentos/${id}/mensagens?page=${page}&size=50`)
+      .subscribe({
+        next: (pageData) => {
+          // O Java traz ordenado do mais recente para o antigo (Desc).
+          // Para o UI fazer sentido (antigas em cima), invertemos o array.
+          const novasMapeadas = pageData.content.map((m) => ({
+            id: m.id,
+            remetenteTipo: m.remetenteTipo,
+            tipoMensagem: m.tipoMensagem,
+            conteudo: m.conteudo,
+            hora: this.formatarHora(m.criadoEm),
+          })).reverse();
+
+          this.paginaAtual = pageData.number;
+          this.ultimaPagina = pageData.last;
+
+          if (page === 0) {
+            this.mensagens = novasMapeadas;
+            this.atualizarCache(id);
+            this.cdr.detectChanges();
+            this.scrollParaBaixo();
+          } else {
+            // Guarda a posição atual do scroll para o ecrã não "saltar" ao colocar mensagens em cima
+            const el = this.areaMensagens?.nativeElement;
+            const scrollAnterior = el ? el.scrollHeight - el.scrollTop : 0;
+
+            this.mensagens = [...novasMapeadas, ...this.mensagens];
+            this.atualizarCache(id);
+            this.cdr.detectChanges();
+
+            setTimeout(() => {
+              if (el) el.scrollTop = el.scrollHeight - scrollAnterior;
+            }, 0);
+          }
+          this.carregandoMais = false;
+        },
+        error: (e) => {
+          console.error('Erro ao carregar histórico paginado', e);
+          this.carregandoMais = false;
+        },
+      });
+  }
+
+  private atualizarCache(id: number) {
+    this.cacheConversas.set(id, {
+      mensagens: [...this.mensagens],
+      pagina: this.paginaAtual,
+      ultima: this.ultimaPagina
+    });
+  }
+
+  // --- RESTANTE DO CÓDIGO (FICHA E AÇÕES) MANTIDO INTACTO ---
 
   toggleFichaCliente() {
     this.fichaAberta = !this.fichaAberta;
@@ -242,33 +329,6 @@ export class ChatAreaComponent implements OnInit {
     });
   }
 
-  private carregarHistorico(id: number) {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    this.http
-      .get<any[]>(`${API_CONFIG.baseUrl}/api/atendimentos/${id}/mensagens`)
-      .subscribe({
-        next: (lista) => {
-          const mapeadas = lista.map((m) => ({
-            id: m.id,
-            remetenteTipo: m.remetenteTipo,
-            tipoMensagem: m.tipoMensagem,
-            conteudo: m.conteudo,
-            hora: this.formatarHora(m.criadoEm),
-          }));
-          this.cacheMensagens.set(id, mapeadas);
-          if (this.selecionado?.id === id) {
-            this.mensagens = [...mapeadas];
-            this.cdr.detectChanges();
-            this.scrollParaBaixo();
-          }
-        },
-        error: (e) => {
-          console.error('Erro ao carregar histórico', e);
-        },
-      });
-  }
-
   enviarMensagem() {
     const texto = this.mensagemDigitada.trim();
     if (!texto || !this.selecionado) return;
@@ -279,7 +339,6 @@ export class ChatAreaComponent implements OnInit {
       tipoMensagem: 'TEXTO',
     };
 
-    // OPTIMISTIC UI: Mostra o balão verde na tela em 0ms (instantâneo!)
     const msgOtimista: MensagemView = {
       remetenteTipo: 'VENDEDOR',
       tipoMensagem: 'TEXTO',
@@ -288,7 +347,7 @@ export class ChatAreaComponent implements OnInit {
     };
 
     this.mensagens.push(msgOtimista);
-    this.cacheMensagens.set(atendimentoId, [...this.mensagens]);
+    this.atualizarCache(atendimentoId);
     this.mensagemDigitada = '';
     this.cdr.detectChanges();
     this.scrollParaBaixo();
@@ -297,7 +356,6 @@ export class ChatAreaComponent implements OnInit {
       .post<any>(`${API_CONFIG.baseUrl}/api/atendimentos/${atendimentoId}/mensagens`, payload)
       .subscribe({
         next: (msgSalva) => {
-          // Vincula o ID oficial gerado pelo MySQL na mensagem que já está na tela
           msgOtimista.id = msgSalva.id;
           if (this.selecionado && this.selecionado.status !== 'ABERTO') {
             this.selecionado.status = 'ABERTO';
@@ -307,7 +365,6 @@ export class ChatAreaComponent implements OnInit {
         },
         error: (e) => {
           console.error('Erro ao enviar mensagem:', e);
-          // Remove o balão se houve queda de internet e devolve o texto ao input
           this.mensagens = this.mensagens.filter((m) => m !== msgOtimista);
           this.mensagemDigitada = texto;
           this.cdr.detectChanges();
@@ -330,7 +387,7 @@ export class ChatAreaComponent implements OnInit {
           if (this.selecionado) {
             this.selecionado.status = 'FECHADO';
           }
-          this.carregarHistorico(id);
+          this.carregarHistoricoPaginado(id, 0);
           if (this.fichaAberta) {
             this.carregarFicha(id);
           }

@@ -115,7 +115,7 @@
     </div>
 
     <!-- Container de Mensagens Dinâmicas -->
-    <div #areaMensagens class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4">
+   <div #areaMensagens (scroll)="aoRolarChat($event)" class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4">
       <!-- Estado vazio -->
       <div
         *ngIf="!selecionado"
