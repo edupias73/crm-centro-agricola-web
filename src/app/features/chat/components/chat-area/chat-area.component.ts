@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, Subscription } from 'rxjs';
 import { WebsocketService } from '../../../../websocket.service';
-import { AtendimentoService, AtendimentoResumo } from '../../../../atendimento.service';
+import { AtendimentoService, AtendimentoResumo,parseDataUtcMs } from '../../../../atendimento.service';
 import { ConfiguracaoService } from '../../../../configuracao.service';
 import { API_CONFIG } from '../../../../api.config';
 
@@ -102,7 +102,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   fechando = false;
   alertaWsVisivel = false;
 
-  // --- Permissões e SLA vindos do Admin ---
   slaMinutos = 40;
   podeTransferir = true;
   podeFechar = true;
@@ -112,7 +111,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   usuarioPerfil = 'VENDEDOR';
   usuarioNome = 'Rafael De Felice';
 
-  // --- Paginação e Cache ---
   paginaAtual = 0;
   ultimaPagina = false;
   carregandoMais = false;
@@ -120,7 +118,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   private cacheConversas = new Map<number, CacheConversa>();
   private cacheFichas = new Map<number, FichaCliente>();
 
-  // --- Multimídia (Áudio, Fotos, Vídeos e PDFs) ---
   menuAnexoAberto = false;
   gravandoAudio = false;
   tempoGravacaoSegundos = 0;
@@ -128,7 +125,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   private audioChunks: Blob[] = [];
   private timerGravacao: any = null;
 
-  // --- Janela 24h e Plantillas (Foto 2 e Foto 4) ---
   forcarJanela24hFechada = false;
   plantillaSelecionada: PlantillaMeta | null = null;
   plantillas: PlantillaMeta[] = [
@@ -136,8 +132,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
       id: 'promo_insumos_campana',
       nome: 'promo_insumos_campana',
       categoria: 'Marketing',
-      previa:
-        'Hola {{1}}, ya está disponible la línea de insumos para la campaña. Respondé este mensaje y te paso precios.',
+      previa: 'Hola {{1}}, ya está disponible la línea de insumos para la campaña. Respondé este mensaje y te paso precios.',
       custoGuaranies: '₲ 4.900',
     },
     {
@@ -163,14 +158,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     },
   ];
 
-  // --- Ficha do Cliente (Foto 4) ---
   fichaAberta = false;
   carregandoFicha = false;
   editandoFicha = false;
   salvandoFicha = false;
   ficha: FichaCliente | null = null;
 
-  // --- Modal de Transferência (Foto 3) ---
   modalAberto = false;
   motivosTransferenciaChips = [
     'Cliente mayorista',
@@ -186,7 +179,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   notaInterna = '';
   transferindo = false;
 
-  // --- Modal de Motivo de Fechamento (Tags y cierres) ---
   modalFecharAberto = false;
   motivoFechamentoSelecionado = 'Venta concretada';
 
@@ -222,6 +214,13 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
         if (this.motivosCierreDisponiveis.length > 0) {
           this.motivoFechamentoSelecionado = this.motivosCierreDisponiveis[0];
         }
+        this.cdr.detectChanges();
+      }),
+    );
+
+    // Atualiza o contador X/40m do topo do chat sozinho a cada 15 segundos!
+    this.subs.add(
+      this.wsService.pulsoTempoReal$.subscribe(() => {
         this.cdr.detectChanges();
       }),
     );
@@ -269,6 +268,14 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
           const idDaConversa = novaMensagem?.atendimentoId ?? novaMensagem?.atendimento?.id;
           if (!idDaConversa) return;
 
+          if (novaMensagem.tipoMensagem === 'SISTEMA_EVENTO') {
+            if (this.selecionado && idDaConversa === this.selecionado.id && novaMensagem.conteudo === 'SLA_ATRASADO') {
+              this.selecionado.status = 'ATRASADO';
+              this.cdr.detectChanges();
+            }
+            return;
+          }
+
           const novaView: MensagemView = {
             id: novaMensagem.id,
             remetenteTipo: novaMensagem.remetenteTipo,
@@ -289,6 +296,11 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
           if (this.selecionado && idDaConversa === this.selecionado.id) {
             if (novaView.remetenteTipo === 'CLIENTE') {
               this.alertaWsVisivel = true;
+              // Se estava RESPONDIDO ou FECHADO, volta imediatamente para ABERTO e inicia o contador X/40m!
+              if (this.selecionado.status !== 'ABERTO' && this.selecionado.status !== 'ATRASADO') {
+                this.selecionado.status = 'ABERTO';
+                this.selecionado.ultimaInteracao = novaMensagem.criadoEm || new Date().toISOString();
+              }
             }
 
             const jaExiste =
@@ -305,6 +317,8 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
               this.atualizarCache(idDaConversa);
               this.cdr.detectChanges();
               this.scrollParaBaixo();
+            } else {
+              this.cdr.detectChanges();
             }
           } else {
             const cacheData = this.cacheConversas.get(idDaConversa);
@@ -331,23 +345,19 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     return diffHoras >= 24;
   }
 
-  get minutosEsperaAtual(): number {
-    if (!this.selecionado?.ultimaInteracao) return 4;
-    const diff = Date.now() - new Date(this.selecionado.ultimaInteracao).getTime();
-    return Math.max(1, Math.floor(diff / 60000));
+get minutosEsperaAtual(): number {
+    if (!this.selecionado) return 0;
+    if (typeof this.selecionado.esperaMin === 'number') {
+      return this.selecionado.esperaMin;
+    }
+    if (!this.selecionado.ultimaInteracao) return 0;
+    const diff = Date.now() - parseDataUtcMs(this.selecionado.ultimaInteracao);
+    return Math.max(0, Math.floor(diff / 60000));
   }
-
-  // --- PAGINAÇÃO E SCROLL ---
 
   aoRolarChat(event: any) {
     const el = event.target as HTMLElement;
-    if (
-      el.scrollTop < 50 &&
-      !this.ultimaPagina &&
-      !this.carregandoMais &&
-      !this.carregandoHistorico &&
-      this.selecionado
-    ) {
+    if (el.scrollTop < 50 && !this.ultimaPagina && !this.carregandoMais && !this.carregandoHistorico && this.selecionado) {
       this.carregarHistoricoPaginado(this.selecionado.id, this.paginaAtual + 1);
     }
   }
@@ -364,9 +374,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     }
 
     this.requisicaoHistoricoSub = this.http
-      .get<
-        PageSpring<any>
-      >(`${API_CONFIG.baseUrl}/api/atendimentos/${id}/mensagens?page=${page}&size=50`)
+      .get<PageSpring<any>>(`${API_CONFIG.baseUrl}/api/atendimentos/${id}/mensagens?page=${page}&size=50`)
       .subscribe({
         next: (pageData) => {
           if (!this.selecionado || this.selecionado.id !== id) {
@@ -432,8 +440,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- ENVIO DE TEXTO, PLANTILLAS E MULTIMÍDIA (ÁUDIO, FOTO, VÍDEO, PDF) ---
-
   enviarMensagem() {
     const texto = this.mensagemDigitada.trim();
     if (!texto || !this.selecionado || this.enviando) return;
@@ -476,7 +482,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     const file = input.files?.[0];
     if (!file || !this.selecionado) return;
 
-    // Limite de segurança de 15MB
     if (file.size > 15 * 1024 * 1024) {
       alert('El archivo supera el límite de 15 MB permitido por WhatsApp.');
       return;
@@ -491,8 +496,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      const legenda =
-        this.mensagemDigitada.trim() || this.gerarLegendaPadrao(tipoMensagem, file.name);
+      const legenda = this.mensagemDigitada.trim() || this.gerarLegendaPadrao(tipoMensagem, file.name);
       this.mensagemDigitada = '';
 
       this.dispararEnvioBackend({
@@ -554,9 +558,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     } catch (err) {
       console.error('Microfone indisponível:', err);
-      alert(
-        'No se pudo acceder al micrófono. También podés adjuntar un archivo de audio en el botón (+).',
-      );
+      alert('No se pudo acceder al micrófono. También podés adjuntar un archivo de audio en el botón (+).');
     }
   }
 
@@ -601,6 +603,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     if (!this.selecionado) return;
     const atendimentoId = this.selecionado.id;
     this.enviando = true;
+    this.alertaWsVisivel = false;
 
     const msgOtimista: MensagemView = {
       remetenteTipo: 'VENDEDOR',
@@ -623,8 +626,9 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
         next: (msgSalva) => {
           this.enviando = false;
           msgOtimista.id = msgSalva.id;
-          if (this.selecionado && this.selecionado.status !== 'ABERTO') {
-            this.selecionado.status = 'ABERTO';
+          if (this.selecionado) {
+            this.selecionado.status = 'RESPONDIDO';
+            this.selecionado.ultimaInteracao = new Date().toISOString();
           }
           this.atendimentoService.recarregarLista();
           this.cdr.detectChanges();
@@ -639,8 +643,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
         },
       });
   }
-
-  // --- FICHA DO CLIENTE (FOTO 4) ---
 
   toggleFichaCliente() {
     this.fichaAberta = !this.fichaAberta;
@@ -710,8 +712,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
       });
   }
 
-  // --- FECHAR ATENDIMENTO (COM OU SEM TABULAÇÃO OBRIGATÓRIA) ---
-
   iniciarFechamentoAtendimento() {
     if (!this.selecionado || this.fechando || this.selecionado.status === 'FECHADO') return;
     if (this.cierreObligatorioConMotivo && this.motivosCierreDisponiveis.length > 0) {
@@ -755,8 +755,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   usarRespostaRapida(texto: string) {
     this.mensagemDigitada = texto;
   }
-
-  // --- TRANSFERÊNCIA INTELIGENTE ENTRE SETORES (FOTO 3) ---
 
   abrirTransferencia() {
     if (!this.selecionado || !this.podeTransferir) return;
@@ -848,9 +846,11 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     };
 
     this.http
-      .post(`${API_CONFIG.baseUrl}/api/atendimentos/${this.selecionado.id}/transferir`, body, {
-        responseType: 'text',
-      })
+      .post(
+        `${API_CONFIG.baseUrl}/api/atendimentos/${this.selecionado.id}/transferir`,
+        body,
+        { responseType: 'text' },
+      )
       .subscribe({
         next: () => {
           this.transferindo = false;
@@ -871,8 +871,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
       });
   }
 
-  // --- UTILITÁRIOS ---
-
   anoCliente(dataIso?: string): string {
     if (!dataIso) return '2026';
     return new Date(dataIso).getFullYear().toString();
@@ -888,9 +886,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   }
 
   formatarTempoGravacao(seg: number): string {
-    const m = Math.floor(seg / 60)
-      .toString()
-      .padStart(2, '0');
+    const m = Math.floor(seg / 60).toString().padStart(2, '0');
     const s = (seg % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }

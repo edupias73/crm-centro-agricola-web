@@ -263,7 +263,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.carregarDados();
 
     this.subs.add(
-      this.wsService.mensagens$.subscribe(() => {
+      this.wsService.pulsoTempoReal$.subscribe(() => {
         this.carregarDados();
       }),
     );

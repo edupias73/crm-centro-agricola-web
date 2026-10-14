@@ -1,18 +1,15 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  PLATFORM_ID,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Subject, Subscription } from 'rxjs';
+import { forkJoin, Subject, Subscription, interval } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { API_CONFIG } from '../../../../api.config';
-import { AtendimentoService, AtendimentoResumo } from '../../../../atendimento.service';
+import {
+  AtendimentoService,
+  AtendimentoResumo,
+  parseDataUtcMs,
+} from '../../../../atendimento.service';
 import { WebsocketService } from '../../../../websocket.service';
 import { ConfiguracaoService } from '../../../../configuracao.service';
 
@@ -47,6 +44,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   meusAtendimentos: AtendimentoResumo[] = [];
   filaAtendimentos: AtendimentoResumo[] = [];
   fechadosAtendimentos: AtendimentoResumo[] = [];
+
+  naoLidasMap = new Map<number, number>();
 
   clientes: ClienteCarteira[] = [];
   carregandoClientes = false;
@@ -88,12 +87,40 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.subs.add(
       this.atendimentoService.selecionado$.subscribe((sel) => {
         this.selecionadoId = sel?.id ?? null;
+        if (this.selecionadoId) {
+          this.naoLidasMap.set(this.selecionadoId, 0);
+        }
         this.cdr.detectChanges();
       }),
     );
 
     this.subs.add(
-      this.gatilhoRecarregar$.pipe(debounceTime(350)).subscribe(() => {
+      this.wsService.mensagens$.subscribe((novaMsg: any) => {
+        const idConversa = novaMsg?.atendimentoId ?? novaMsg?.atendimento?.id;
+        if (idConversa) {
+          if (novaMsg.remetenteTipo === 'CLIENTE') {
+            const atual = this.naoLidasMap.get(idConversa) ?? 0;
+            this.naoLidasMap.set(idConversa, atual + 1);
+
+            const item = [...this.meusAtendimentos, ...this.filaAtendimentos].find(
+              (a) => a.id === idConversa,
+            );
+            if (item && item.status === 'RESPONDIDO') {
+              item.status = 'ABERTO';
+              item.ultimaInteracao = new Date().toISOString();
+              item.esperaMin = 0;
+            }
+          } else if (novaMsg.remetenteTipo === 'VENDEDOR') {
+            this.naoLidasMap.set(idConversa, 0);
+          }
+          this.cdr.detectChanges();
+        }
+        this.gatilhoRecarregar$.next();
+      }),
+    );
+
+    this.subs.add(
+      this.gatilhoRecarregar$.pipe(debounceTime(150)).subscribe(() => {
         this.carregar(false);
         if (this.modoSidebar === 'CLIENTES') {
           this.carregarMeusClientes();
@@ -105,11 +132,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.atendimentoService.recarregar$.subscribe(() => this.gatilhoRecarregar$.next()),
     );
 
-    this.subs.add(this.wsService.mensagens$.subscribe(() => this.gatilhoRecarregar$.next()));
+    // Timer isolado de 15s (sem duplicar com wsService.mensagens$)
+    this.subs.add(
+      interval(15000).subscribe(() => {
+        this.gatilhoRecarregar$.next();
+      }),
+    );
   }
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+  }
+
+  qtdNaoLidas(atendimentoId: number): number {
+    return this.naoLidasMap.get(atendimentoId) ?? 0;
   }
 
   mudarAba(aba: 'MEUS' | 'FILA' | 'FECHADOS') {
@@ -139,6 +175,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
         if (!this.selecionadoId && this.meusAtendimentos.length > 0) {
           this.abrir(this.meusAtendimentos[0]);
+        } else if (this.selecionadoId) {
+          const atualizado = [...meus, ...fila, ...fechados].find(
+            (x) => x.id === this.selecionadoId,
+          );
+          const atual = this.atendimentoService.selecionadoAtual;
+          if (atualizado && atual) {
+            atual.status = atualizado.status;
+            atual.ultimaInteracao = atualizado.ultimaInteracao;
+            atual.esperaMin = atualizado.esperaMin;
+            atual.nomeCliente = atualizado.nomeCliente;
+          }
         }
 
         this.cdr.detectChanges();
@@ -192,17 +239,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const termo = this.termoBusca.trim().toLowerCase();
     if (!termo) return this.clientes;
     return this.clientes.filter(
-      (c) => c.nome?.toLowerCase().includes(termo) || c.telefone?.toLowerCase().includes(termo),
+      (c) =>
+        c.nome?.toLowerCase().includes(termo) ||
+        c.telefone?.toLowerCase().includes(termo),
     );
   }
 
   abrir(item: AtendimentoResumo) {
     this.selecionadoId = item.id;
+    this.naoLidasMap.set(item.id, 0);
     this.atendimentoService.selecionar(item);
   }
 
   abrirClienteDaCarteira(c: ClienteCarteira) {
     this.selecionadoId = c.ultimoAtendimentoId;
+    this.naoLidasMap.set(c.ultimoAtendimentoId, 0);
     this.atendimentoService.selecionar({
       id: c.ultimoAtendimentoId,
       nomeCliente: c.nome,
@@ -213,15 +264,25 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   minutosEspera(dataIso: string): number {
+    const item = [...this.meusAtendimentos, ...this.filaAtendimentos].find(
+      (a) => a.ultimaInteracao === dataIso,
+    );
+    if (item && typeof item.esperaMin === 'number') {
+      return item.esperaMin;
+    }
     if (!dataIso) return 0;
-    const diff = Date.now() - new Date(dataIso).getTime();
+    const diff = Date.now() - parseDataUtcMs(dataIso);
     return Math.max(0, Math.floor(diff / 60000));
   }
 
-  nivelEspera(item: AtendimentoResumo): 'OK' | 'RISCO' | 'ATRASADO' | 'FECHADO' {
+  nivelEspera(item: AtendimentoResumo): 'OK' | 'RISCO' | 'ATRASADO' | 'RESPONDIDO' | 'FECHADO' {
     if (item.status === 'FECHADO') return 'FECHADO';
+    if (item.status === 'RESPONDIDO') return 'RESPONDIDO';
     if (item.status === 'ATRASADO') return 'ATRASADO';
-    const min = this.minutosEspera(item.ultimaInteracao);
+    const min =
+      typeof item.esperaMin === 'number'
+        ? item.esperaMin
+        : this.minutosEspera(item.ultimaInteracao);
     if (min >= this.slaMinutos) return 'ATRASADO';
     if (min >= Math.floor(this.slaMinutos / 2)) return 'RISCO';
     return 'OK';
@@ -237,6 +298,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   hora(dataIso: string): string {
     if (!dataIso) return '';
-    return new Date(dataIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(parseDataUtcMs(dataIso)).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

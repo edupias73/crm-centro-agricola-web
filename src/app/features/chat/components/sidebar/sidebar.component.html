@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <!-- MODO 1: MIS ATENCIONES (FOTO 1) -->
+  <!-- MODO 1: MIS ATENCIONES -->
   @if (modoSidebar === 'ATENCIONES') {
     <div class="flex border-b border-gray-200 text-xs font-medium text-gray-500 px-2">
       <button
@@ -34,10 +34,7 @@
         class="px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors"
       >
         Mis atenciones
-        <span
-          class="ml-1 font-bold"
-          [ngClass]="abaAtiva === 'MEUS' ? 'text-green-700' : 'text-gray-400'"
-        >
+        <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'MEUS' ? 'text-green-700' : 'text-gray-400'">
           {{ meusAtendimentos.length }}
         </span>
       </button>
@@ -52,10 +49,7 @@
         class="px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors"
       >
         En la fila
-        <span
-          class="ml-1 font-bold"
-          [ngClass]="abaAtiva === 'FILA' ? 'text-green-700' : 'text-gray-400'"
-        >
+        <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'FILA' ? 'text-green-700' : 'text-gray-400'">
           {{ filaAtendimentos.length }}
         </span>
       </button>
@@ -70,10 +64,7 @@
         class="px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors"
       >
         Cerrados
-        <span
-          class="ml-1 font-bold"
-          [ngClass]="abaAtiva === 'FECHADOS' ? 'text-green-700' : 'text-gray-400'"
-        >
+        <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'FECHADOS' ? 'text-green-700' : 'text-gray-400'">
           {{ fechadosAtendimentos.length }}
         </span>
       </button>
@@ -97,10 +88,9 @@
             class="flex items-start p-3.5 hover:bg-gray-50 border-l-4 cursor-pointer transition-colors"
             [ngClass]="{
               'bg-green-50/50 border-green-700': selecionadoId === item.id,
-              'border-transparent': selecionadoId !== item.id,
+              'border-transparent': selecionadoId !== item.id
             }"
           >
-            <!-- Avatar com bolinha de atraso se estourar SLA -->
             <div class="relative mr-3 shrink-0">
               <div
                 class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shadow-sm"
@@ -127,18 +117,14 @@
                 <h4 class="text-sm font-bold text-gray-900 truncate">{{ item.nomeCliente }}</h4>
                 <span
                   class="text-[11px] font-medium"
-                  [ngClass]="
-                    nivelEspera(item) === 'ATRASADO' ? 'text-red-600 font-bold' : 'text-gray-400'
-                  "
+                  [ngClass]="nivelEspera(item) === 'ATRASADO' ? 'text-red-600 font-bold' : 'text-gray-400'"
                 >
                   {{ hora(item.ultimaInteracao) }}
                 </span>
               </div>
 
               <div class="flex items-center gap-1.5 mb-1">
-                <span
-                  class="px-1.5 py-0.5 bg-green-50 text-green-800 text-[9px] font-bold rounded uppercase"
-                >
+                <span class="px-1.5 py-0.5 bg-green-50 text-green-800 text-[9px] font-bold rounded uppercase">
                   {{ item.setor || 'MINORISTA' }}
                 </span>
                 <span class="text-[11px] text-gray-400 truncate">
@@ -150,26 +136,33 @@
 
               <div class="flex items-center justify-between">
                 @if (nivelEspera(item) === 'FECHADO') {
-                  <span
-                    class="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600"
-                  >
+                  <span class="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600">
                     ○ cerrada
+                  </span>
+                } @else if (nivelEspera(item) === 'RESPONDIDO') {
+                  <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-green-50 text-green-700">
+                    ✓ respondido
                   </span>
                 } @else if (nivelEspera(item) === 'ATRASADO') {
                   <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-600">
                     ○ esperando {{ minutosEspera(item.ultimaInteracao) }} min
                   </span>
                 } @else if (nivelEspera(item) === 'RISCO') {
-                  <span
-                    class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 text-amber-700"
-                  >
+                  <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 text-amber-700">
                     ○ esperando {{ minutosEspera(item.ultimaInteracao) }} min
                   </span>
                 } @else {
-                  <span
-                    class="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600"
-                  >
+                  <span class="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600">
                     ○ esperando {{ minutosEspera(item.ultimaInteracao) }} min
+                  </span>
+                }
+
+                <!-- Bolinha verde de mensagens não lidas igual à Foto 1 -->
+                @if (qtdNaoLidas(item.id) > 0) {
+                  <span
+                    class="min-w-[18px] h-[18px] px-1 rounded-full bg-green-700 text-white text-[10px] font-bold flex items-center justify-center shadow-sm"
+                  >
+                    {{ qtdNaoLidas(item.id) }}
                   </span>
                 }
               </div>
@@ -180,11 +173,9 @@
     </div>
   }
 
-  <!-- MODO 2: MIS CLIENTES NA SIDEBAR (FOTO 5) -->
+  <!-- MODO 2: MIS CLIENTES NA SIDEBAR -->
   @if (modoSidebar === 'CLIENTES') {
-    <div
-      class="px-3.5 py-2.5 border-b border-gray-100 flex items-center justify-between text-xs text-gray-500"
-    >
+    <div class="px-3.5 py-2.5 border-b border-gray-100 flex items-center justify-between text-xs text-gray-500">
       <span>Clientes bajo tu responsabilidad</span>
       <span class="font-bold text-gray-800">{{ clientesFiltrados.length }} clientes</span>
     </div>
@@ -201,7 +192,7 @@
             class="flex items-start p-3.5 hover:bg-gray-50 border-l-4 cursor-pointer transition-colors"
             [ngClass]="{
               'bg-green-50/50 border-green-700': selecionadoId === c.ultimoAtendimentoId,
-              'border-transparent': selecionadoId !== c.ultimoAtendimentoId,
+              'border-transparent': selecionadoId !== c.ultimoAtendimentoId
             }"
           >
             <div
@@ -213,9 +204,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-2">
                 <h4 class="text-sm font-bold text-gray-900 truncate">{{ c.nome }}</h4>
-                <span
-                  class="px-1.5 py-0.5 bg-green-50 text-green-800 text-[9px] font-bold rounded uppercase shrink-0"
-                >
+                <span class="px-1.5 py-0.5 bg-green-50 text-green-800 text-[9px] font-bold rounded uppercase shrink-0">
                   MINORISTA
                 </span>
               </div>

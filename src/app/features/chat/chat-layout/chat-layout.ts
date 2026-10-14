@@ -1,20 +1,16 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  PLATFORM_ID,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { ChatAreaComponent } from '../components/chat-area/chat-area.component';
 import { AtendimentoService } from '../../../atendimento.service';
 import { WebsocketService } from '../../../websocket.service';
 import { ConfiguracaoService } from '../../../configuracao.service';
+import { API_CONFIG } from '../../../api.config';
 
 @Component({
   selector: 'app-chat-layout',
@@ -24,6 +20,7 @@ import { ConfiguracaoService } from '../../../configuracao.service';
 })
 export class ChatLayout implements OnInit, OnDestroy {
   private router = inject(Router);
+  private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private cdr = inject(ChangeDetectorRef);
   private atendimentoService = inject(AtendimentoService);
@@ -128,12 +125,19 @@ export class ChatLayout implements OnInit, OnDestroy {
   }
 
   sair() {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('token');
-    }
-    this.wsService.desconectar();
-    this.atendimentoService.selecionar(null);
-    this.router.navigate(['/login']);
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.http
+      .post(`${API_CONFIG.baseUrl}/api/auth/logout`, {})
+      .pipe(
+        finalize(() => {
+          localStorage.removeItem('token');
+          this.wsService.desconectar();
+          this.atendimentoService.selecionar(null);
+          this.router.navigate(['/login']);
+        }),
+      )
+      .subscribe();
   }
 
   iniciais(texto: string): string {

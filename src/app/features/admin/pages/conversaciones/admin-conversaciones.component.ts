@@ -1,11 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  PLATFORM_ID,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -26,7 +19,7 @@ import { WebsocketService } from '../../../../websocket.service';
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Todas las conversaciones</h1>
           <p class="text-xs text-gray-500 mt-1">
-            Vista completa de la operación en vivo desde MySQL.
+            Vista completa de la operación en vivo desde MySQL · Actualización automática
           </p>
         </div>
 
@@ -37,9 +30,7 @@ import { WebsocketService } from '../../../../websocket.service';
             placeholder="Buscar cliente, teléfono o vendedor..."
             class="bg-white border border-gray-200 rounded-lg px-3.5 py-2 text-xs w-64 focus:outline-none focus:border-green-700"
           />
-          <div
-            class="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs"
-          >
+          <div class="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs">
             <span class="text-gray-400 font-bold uppercase mr-2">Vendedor</span>
             <select
               [(ngModel)]="filtroVendedor"
@@ -117,19 +108,19 @@ import { WebsocketService } from '../../../../websocket.service';
         } @else {
           <div class="min-w-[760px]">
             <div
-              class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.7fr_80px] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
+              class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.8fr_80px] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
             >
               <span>Cliente</span>
               <span>Sector</span>
               <span>Vendedor</span>
               <span>Último mensaje</span>
-              <span>Esperando</span>
+              <span>Estado / SLA</span>
               <span class="text-right"></span>
             </div>
 
             @for (c of conversasFiltradas; track c.id) {
               <div
-                class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.7fr_80px] gap-x-4 items-center px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/60"
+                class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.8fr_80px] gap-x-4 items-center px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/60"
               >
                 <div class="flex items-center gap-3 min-w-0">
                   <div
@@ -172,25 +163,23 @@ import { WebsocketService } from '../../../../websocket.service';
 
                 <div>
                   @if (c.status === 'FECHADO') {
-                    <span
-                      class="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-500"
-                    >
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-500">
                       cerrada
+                    </span>
+                  } @else if (c.status === 'RESPONDIDO') {
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-green-50 text-green-700">
+                      ✓ respondido
                     </span>
                   } @else if (c.status === 'ATRASADO' || c.esperaMin >= limiteSla) {
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-600">
                       {{ c.esperaMin }} min
                     </span>
                   } @else if (c.esperaMin >= metadeSla) {
-                    <span
-                      class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 text-amber-700"
-                    >
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 text-amber-700">
                       {{ c.esperaMin }} min
                     </span>
                   } @else {
-                    <span
-                      class="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-600"
-                    >
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-600">
                       {{ c.esperaMin }} min
                     </span>
                   }
@@ -253,7 +242,9 @@ export class AdminConversacionesComponent implements OnInit, OnDestroy {
 
     this.carregar();
 
-    this.subs.add(this.wsService.mensagens$.subscribe(() => this.carregar()));
+    this.subs.add(
+      this.wsService.pulsoTempoReal$.subscribe(() => this.carregar()),
+    );
   }
 
   ngOnDestroy() {
@@ -285,8 +276,12 @@ export class AdminConversacionesComponent implements OnInit, OnDestroy {
   get conversasFiltradas(): ConversaSupervisao[] {
     return this.conversas.filter((c) => {
       if (this.filtroStatus === 'ABIERTAS' && c.status === 'FECHADO') return false;
-      if (this.filtroStatus === 'SLA' && c.esperaMin < this.limiteSla && c.status !== 'ATRASADO')
+      if (
+        this.filtroStatus === 'SLA' &&
+        (c.status === 'FECHADO' || c.status === 'RESPONDIDO' || (c.esperaMin < this.limiteSla && c.status !== 'ATRASADO'))
+      ) {
         return false;
+      }
       if (this.filtroStatus === 'CERRADAS' && c.status !== 'FECHADO') return false;
       if (this.filtroVendedor !== 'TODOS' && c.vendedor !== this.filtroVendedor) return false;
 
