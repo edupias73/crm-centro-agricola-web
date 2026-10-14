@@ -15,99 +15,247 @@
       <input
         type="text"
         [(ngModel)]="termoBusca"
-        class="bg-gray-50 border border-gray-200 text-sm rounded-lg block w-full pl-9 p-2.5 focus:ring-1 focus:ring-green-500 focus:outline-none"
+        class="bg-gray-50 border border-gray-200 text-xs rounded-xl block w-full pl-9 p-2.5 focus:ring-1 focus:ring-green-600 focus:outline-none"
         placeholder="Buscar cliente, teléfono o producto"
       />
     </div>
   </div>
 
-  <!-- Abas (Tabs Dinâmicas) -->
-  <div class="flex border-b border-gray-200 text-sm font-medium text-gray-500 px-2">
-    <button
-      (click)="mudarAba('MEUS')"
-      [ngClass]="abaAtiva === 'MEUS' ? 'border-gray-800 text-gray-900 font-bold' : 'border-transparent hover:text-gray-700'"
-      class="px-3 py-3 border-b-2 whitespace-nowrap transition-colors"
-    >
-      Mis atenciones
-      <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'MEUS' ? 'text-gray-900' : 'text-gray-400'">
-        {{ meusAtendimentos.length }}
-      </span>
-    </button>
-
-    <button
-      (click)="mudarAba('FILA')"
-      [ngClass]="abaAtiva === 'FILA' ? 'border-gray-800 text-gray-900 font-bold' : 'border-transparent hover:text-gray-700'"
-      class="px-3 py-3 border-b-2 whitespace-nowrap transition-colors"
-    >
-      En la fila
-      <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'FILA' ? 'text-gray-900' : 'text-gray-400'">
-        {{ filaAtendimentos.length }}
-      </span>
-    </button>
-
-    <button
-      (click)="mudarAba('FECHADOS')"
-      [ngClass]="abaAtiva === 'FECHADOS' ? 'border-gray-800 text-gray-900 font-bold' : 'border-transparent hover:text-gray-700'"
-      class="px-3 py-3 border-b-2 whitespace-nowrap transition-colors"
-    >
-      Cerrados
-      <span class="ml-1 font-bold" [ngClass]="abaAtiva === 'FECHADOS' ? 'text-gray-900' : 'text-gray-400'">
-        {{ fechadosAtendimentos.length }}
-      </span>
-    </button>
-  </div>
-
-  <!-- Lista de Chats (Scroll) -->
-  <div class="flex-1 overflow-y-auto">
-    @if (carregando) {
-      <div class="p-4 text-sm text-gray-400 text-center">Carregando atendimentos...</div>
-    } @else if (erro) {
-      <div class="p-4 text-sm text-red-500 text-center">
-        Não foi possível carregar. Faça login e tente de novo.
-      </div>
-    } @else if (listaDaAbaAtual.length === 0) {
-      <div class="p-6 text-sm text-gray-400 text-center">Nenhum atendimento nesta aba.</div>
-    } @else if (atendimentosFiltrados.length === 0) {
-      <div class="p-6 text-sm text-gray-400 text-center">Nenhum resultado para a busca.</div>
-    } @else {
-      @for (item of atendimentosFiltrados; track item.id) {
-        <div
-          (click)="abrir(item)"
-          class="flex items-start p-3 hover:bg-gray-50 border-l-4 border-b border-gray-50 cursor-pointer"
-          [class.bg-green-50]="selecionadoId === item.id"
-          [class.border-green-600]="selecionadoId === item.id"
-          [class.border-transparent]="selecionadoId !== item.id"
+  <!-- MODO 1: MIS ATENCIONES (FOTO 1) -->
+  @if (modoSidebar === 'ATENCIONES') {
+    <div class="flex border-b border-gray-200 text-xs font-medium text-gray-500 px-2">
+      <button
+        (click)="mudarAba('MEUS')"
+        [ngClass]="
+          abaAtiva === 'MEUS'
+            ? 'border-[#0a3a2a] text-gray-900 font-bold'
+            : 'border-transparent hover:text-gray-700'
+        "
+        class="px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors"
+      >
+        Mis atenciones
+        <span
+          class="ml-1 font-bold"
+          [ngClass]="abaAtiva === 'MEUS' ? 'text-green-700' : 'text-gray-400'"
         >
-          <div
-            class="w-10 h-10 rounded-full bg-green-800 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm mr-3"
-          >
-            {{ iniciais(item.nomeCliente) }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex justify-between items-center mb-0.5">
-              <h4 class="text-sm font-bold text-gray-900 truncate">{{ item.nomeCliente }}</h4>
-              <span class="text-xs text-gray-400">{{ hora(item.ultimaInteracao) }}</span>
-            </div>
-            <p class="text-xs text-gray-500 truncate mb-1.5">{{ item.telefoneCliente }}</p>
-            <span
-              class="px-1.5 py-0.5 text-[10px] font-bold rounded uppercase"
-              [ngClass]="{
-                'bg-green-100 text-green-800': item.status === 'ABERTO',
-                'bg-red-100 text-red-800': item.status === 'ATRASADO',
-                'bg-gray-100 text-gray-600': item.status === 'FECHADO'
-              }"
-            >{{ item.status }}</span>
-          </div>
-        </div>
-      }
-    }
-  </div>
+          {{ meusAtendimentos.length }}
+        </span>
+      </button>
 
-  <!-- Rodapé Sidebar -->
+      <button
+        (click)="mudarAba('FILA')"
+        [ngClass]="
+          abaAtiva === 'FILA'
+            ? 'border-[#0a3a2a] text-gray-900 font-bold'
+            : 'border-transparent hover:text-gray-700'
+        "
+        class="px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors"
+      >
+        En la fila
+        <span
+          class="ml-1 font-bold"
+          [ngClass]="abaAtiva === 'FILA' ? 'text-green-700' : 'text-gray-400'"
+        >
+          {{ filaAtendimentos.length }}
+        </span>
+      </button>
+
+      <button
+        (click)="mudarAba('FECHADOS')"
+        [ngClass]="
+          abaAtiva === 'FECHADOS'
+            ? 'border-[#0a3a2a] text-gray-900 font-bold'
+            : 'border-transparent hover:text-gray-700'
+        "
+        class="px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors"
+      >
+        Cerrados
+        <span
+          class="ml-1 font-bold"
+          [ngClass]="abaAtiva === 'FECHADOS' ? 'text-green-700' : 'text-gray-400'"
+        >
+          {{ fechadosAtendimentos.length }}
+        </span>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto divide-y divide-gray-100">
+      @if (carregando) {
+        <div class="p-4 text-xs text-gray-400 text-center">Cargando atenciones...</div>
+      } @else if (erro) {
+        <div class="p-4 text-xs text-red-500 text-center">
+          No se pudo cargar. Iniciá sesión nuevamente.
+        </div>
+      } @else if (listaDaAbaAtual.length === 0) {
+        <div class="p-6 text-xs text-gray-400 text-center">Ninguna atención en esta pestaña.</div>
+      } @else if (atendimentosFiltrados.length === 0) {
+        <div class="p-6 text-xs text-gray-400 text-center">Sin resultados para la búsqueda.</div>
+      } @else {
+        @for (item of atendimentosFiltrados; track item.id) {
+          <div
+            (click)="abrir(item)"
+            class="flex items-start p-3.5 hover:bg-gray-50 border-l-4 cursor-pointer transition-colors"
+            [ngClass]="{
+              'bg-green-50/50 border-green-700': selecionadoId === item.id,
+              'border-transparent': selecionadoId !== item.id,
+            }"
+          >
+            <!-- Avatar com bolinha de atraso se estourar SLA -->
+            <div class="relative mr-3 shrink-0">
+              <div
+                class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shadow-sm"
+                [ngClass]="
+                  selecionadoId === item.id
+                    ? 'bg-[#0a3a2a] text-white'
+                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+                "
+              >
+                {{ iniciais(item.nomeCliente) }}
+              </div>
+              @if (nivelEspera(item) === 'ATRASADO') {
+                <span
+                  class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold border border-white"
+                  title="Fuera de SLA"
+                >
+                  ⏱
+                </span>
+              }
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-center mb-0.5">
+                <h4 class="text-sm font-bold text-gray-900 truncate">{{ item.nomeCliente }}</h4>
+                <span
+                  class="text-[11px] font-medium"
+                  [ngClass]="
+                    nivelEspera(item) === 'ATRASADO' ? 'text-red-600 font-bold' : 'text-gray-400'
+                  "
+                >
+                  {{ hora(item.ultimaInteracao) }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1.5 mb-1">
+                <span
+                  class="px-1.5 py-0.5 bg-green-50 text-green-800 text-[9px] font-bold rounded uppercase"
+                >
+                  {{ item.setor || 'MINORISTA' }}
+                </span>
+                <span class="text-[11px] text-gray-400 truncate">
+                  {{ item.categoria || 'Insumos' }}
+                </span>
+              </div>
+
+              <p class="text-xs text-gray-500 truncate mb-2">{{ item.telefoneCliente }}</p>
+
+              <div class="flex items-center justify-between">
+                @if (nivelEspera(item) === 'FECHADO') {
+                  <span
+                    class="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600"
+                  >
+                    ○ cerrada
+                  </span>
+                } @else if (nivelEspera(item) === 'ATRASADO') {
+                  <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-600">
+                    ○ esperando {{ minutosEspera(item.ultimaInteracao) }} min
+                  </span>
+                } @else if (nivelEspera(item) === 'RISCO') {
+                  <span
+                    class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 text-amber-700"
+                  >
+                    ○ esperando {{ minutosEspera(item.ultimaInteracao) }} min
+                  </span>
+                } @else {
+                  <span
+                    class="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600"
+                  >
+                    ○ esperando {{ minutosEspera(item.ultimaInteracao) }} min
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- MODO 2: MIS CLIENTES NA SIDEBAR (FOTO 5) -->
+  @if (modoSidebar === 'CLIENTES') {
+    <div
+      class="px-3.5 py-2.5 border-b border-gray-100 flex items-center justify-between text-xs text-gray-500"
+    >
+      <span>Clientes bajo tu responsabilidad</span>
+      <span class="font-bold text-gray-800">{{ clientesFiltrados.length }} clientes</span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto divide-y divide-gray-100">
+      @if (carregandoClientes) {
+        <div class="p-6 text-xs text-gray-400 text-center">Cargando cartera...</div>
+      } @else if (clientesFiltrados.length === 0) {
+        <div class="p-6 text-xs text-gray-400 text-center">Ningún cliente encontrado.</div>
+      } @else {
+        @for (c of clientesFiltrados; track c.clienteId) {
+          <div
+            (click)="abrirClienteDaCarteira(c)"
+            class="flex items-start p-3.5 hover:bg-gray-50 border-l-4 cursor-pointer transition-colors"
+            [ngClass]="{
+              'bg-green-50/50 border-green-700': selecionadoId === c.ultimoAtendimentoId,
+              'border-transparent': selecionadoId !== c.ultimoAtendimentoId,
+            }"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center font-bold text-xs shrink-0 mr-3"
+            >
+              {{ iniciais(c.nome) }}
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <h4 class="text-sm font-bold text-gray-900 truncate">{{ c.nome }}</h4>
+                <span
+                  class="px-1.5 py-0.5 bg-green-50 text-green-800 text-[9px] font-bold rounded uppercase shrink-0"
+                >
+                  MINORISTA
+                </span>
+              </div>
+
+              <p class="text-[11px] text-gray-500 mt-0.5 truncate">{{ c.telefone }}</p>
+
+              <div class="flex items-center gap-2 mt-2">
+                <span
+                  class="px-2 py-0.5 text-[10px] font-semibold rounded"
+                  [ngClass]="
+                    c.statusUltimoAtendimento !== 'FECHADO'
+                      ? 'bg-green-50 text-green-800'
+                      : 'bg-gray-100 text-gray-600'
+                  "
+                >
+                  {{
+                    c.statusUltimoAtendimento !== 'FECHADO'
+                      ? 'Conversación abierta'
+                      : 'Sin conversación activa'
+                  }}
+                </span>
+                <span class="text-[10px] text-gray-400 truncate">
+                  {{ c.totalAtendimentos }} conversaciones
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- Rodapé Sidebar Dinâmico -->
   <div
-    class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-500 flex items-center gap-1.5"
+    class="p-2.5 border-t border-gray-200 bg-gray-50 text-[11px] text-gray-500 flex items-center gap-1.5 shrink-0"
   >
-    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-    Sticky Session activa · SLA 40 min
+    <span
+      class="w-1.5 h-1.5 rounded-full"
+      [ngClass]="stickyAtiva ? 'bg-green-500' : 'bg-gray-400'"
+    ></span>
+    {{ stickyAtiva ? 'Sticky Session activa' : 'Rotación libre' }} · SLA {{ slaMinutos }} min
   </div>
 </div>

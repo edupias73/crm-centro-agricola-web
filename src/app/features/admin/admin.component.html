@@ -1,484 +1,174 @@
-<div class="h-screen w-full flex bg-[#f8f9fa] font-sans overflow-hidden">
-  <!-- Sidebar -->
-  <aside class="w-64 bg-[#0a3a2a] text-white flex flex-col shrink-0">
-    <div class="p-4">
-      <div class="bg-white rounded-lg px-3 py-2 flex items-center gap-2">
-        <span class="text-2xl">🚜</span>
-        <span class="text-[#0a3a2a] font-bold text-sm">Centro Agrícola</span>
-      </div>
-    </div>
-
-    <nav class="flex-1 px-3 flex flex-col gap-1 overflow-y-auto">
-      @for (item of menu; track item.id) {
-        <button
-          (click)="secaoAtiva = item.id"
-          [ngClass]="secaoAtiva === item.id ? 'bg-white text-[#0a3a2a]' : 'text-gray-300 hover:bg-white/10'"
-          class="flex items-center gap-3 text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="item.icon" />
-          </svg>
-          <span class="truncate">{{ item.label }}</span>
-        </button>
-      }
-    </nav>
-
-    <div class="p-3 border-t border-white/10 flex flex-col gap-3">
-      <div class="bg-white/5 rounded-lg px-3 py-2">
-        <p class="text-[10px] font-bold tracking-widest text-yellow-500 uppercase">Número central</p>
-        <p class="text-sm font-bold">+595 61 500 900</p>
-        <p class="text-[11px] text-green-400 flex items-center gap-1">
-          <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span> Conectado
-        </p>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs">
-          {{ iniciais(usuarioNome) }}
-        </div>
-        <div class="min-w-0">
-          <p class="text-sm font-bold truncate">{{ usuarioNome }}</p>
-          <p class="text-[11px] text-gray-400">{{ usuarioPerfil }}</p>
-        </div>
-      </div>
-
-      <div class="flex gap-1 bg-white/5 rounded-lg p-1">
-        <button class="flex-1 text-xs font-bold py-1 rounded bg-white/15">ES</button>
-        <button class="flex-1 text-xs font-bold py-1 rounded text-gray-300">PT</button>
-      </div>
-
-      <button
-        (click)="irParaVendedor()"
-        class="w-full text-center bg-white/10 hover:bg-white/20 text-white text-sm font-medium py-2 rounded-lg transition-colors"
-      >
-        Vista vendedor
+<div
+  class="h-screen w-full flex flex-col md:flex-row bg-[#f8f9fa] font-sans overflow-hidden text-gray-800"
+>
+  <!-- TOPBAR MOBILE -->
+  <header
+    class="md:hidden h-14 bg-[#0a3a2a] text-white flex items-center justify-between px-4 shrink-0 z-30"
+  >
+    <div class="flex items-center gap-2.5">
+      <button (click)="menuMobileAberto = !menuMobileAberto" class="p-1.5 rounded-lg bg-white/10">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          ></path>
+        </svg>
       </button>
-      <button
-        (click)="sair()"
-        class="w-full text-center text-gray-300 hover:text-white text-sm font-medium py-1 transition-colors"
-      >
-        Cerrar sesión
-      </button>
+      <span class="font-bold text-sm">🌾 Centro Agrícola · Admin</span>
     </div>
-  </aside>
+    <button
+      (click)="irParaVendedor()"
+      class="px-2.5 py-1 text-xs font-bold bg-white text-[#0a3a2a] rounded-lg"
+    >
+      Vista vendedor
+    </button>
+  </header>
 
-  <!-- Conteúdo -->
-  <main class="flex-1 overflow-y-auto">
-    @if (secaoAtiva === 'dashboard') {
-      <div class="p-6 md:p-8">
-        <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Panel del gestor</p>
-        <div class="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Resumen de la operación</h1>
-            <p class="text-sm text-gray-500 mt-1">
-              Datos de ejemplo — se conectarán cuando el back tenga los endpoints.
-            </p>
-          </div>
-          <div class="flex bg-white border border-gray-200 rounded-lg p-1 text-sm">
-            <button class="px-3 py-1 rounded-md bg-green-700 text-white font-medium">Hoy</button>
-            <button class="px-3 py-1 rounded-md text-gray-500">Semana</button>
-            <button class="px-3 py-1 rounded-md text-gray-500">Mes</button>
-          </div>
+  @if (menuMobileAberto) {
+    <div (click)="menuMobileAberto = false" class="fixed inset-0 bg-black/50 z-40 md:hidden"></div>
+  }
+
+  <!-- SIDEBAR PRINCIPAL -->
+  <aside
+    class="fixed md:relative inset-y-0 left-0 z-50 bg-[#0a3a2a] text-white flex flex-col justify-between shrink-0 transition-all duration-200"
+    [ngClass]="[
+      menuMobileAberto ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0',
+      emConfiguracion ? 'md:w-16' : 'md:w-60',
+    ]"
+  >
+    <div>
+      <div class="p-3">
+        <div class="bg-white rounded-xl px-3 py-2 flex items-center justify-center gap-2 shadow-sm">
+          <span class="text-xl">🌾</span>
+          @if (!emConfiguracion || menuMobileAberto) {
+            <span class="text-[#0a3a2a] font-extrabold text-xs tracking-tight truncate">
+              CENTRO AGRÍCOLA
+            </span>
+          }
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-500">Conversaciones activas</span>
-              <span class="w-2 h-2 rounded-full bg-green-500"></span>
-            </div>
-            <p class="text-3xl font-bold text-gray-900 mt-2">18</p>
-            <p class="text-xs text-gray-400 mt-1">+8 vs. ayer</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-500">Tiempo medio de respuesta</span>
-              <span class="w-2 h-2 rounded-full bg-green-500"></span>
-            </div>
-            <p class="text-3xl font-bold text-gray-900 mt-2">4m 06s</p>
-            <p class="text-xs text-gray-400 mt-1">−41 s vs. ayer</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-500">En la fila</span>
-              <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
-            </div>
-            <p class="text-3xl font-bold text-gray-900 mt-2">3</p>
-            <p class="text-xs text-gray-400 mt-1">sin vendedor asignado</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-500">Fuera de SLA</span>
-              <span class="w-2 h-2 rounded-full bg-red-500"></span>
-            </div>
-            <p class="text-3xl font-bold text-red-600 mt-2">4</p>
-            <p class="text-xs text-red-400 mt-1">límite 40 min</p>
-          </div>
-        </div>
-
-        <div
-          class="bg-white border-l-4 border-yellow-400 rounded-xl border border-gray-100 p-5 mt-4 flex items-start justify-between gap-4"
-        >
-          <div class="flex gap-3">
-            <span class="text-yellow-500 font-bold">!</span>
-            <div>
-              <p class="text-sm font-bold text-gray-900">
-                Reasignación automática ejecutada
-                <span
-                  class="ml-1 text-[10px] font-bold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded uppercase"
-                  >Automático</span
-                >
-              </p>
-              <p class="text-sm text-gray-600 mt-1">
-                Coop. Yguazú esperó <strong>52 min</strong> con Wilson Oliveira → conversación
-                reasignada a <strong>Everton Alexandre</strong>. Regla: sin respuesta en 40 min, pasa
-                al vendedor disponible con menor carga.
-              </p>
-              <p class="text-[11px] text-gray-400 mt-1">Hoy 14:12 · sector Mayorista</p>
-            </div>
-          </div>
-          <button
-            class="shrink-0 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50"
+      <nav class="px-2.5 mt-2 flex flex-col gap-1">
+        @for (item of menu; track item.rota) {
+          <a
+            [routerLink]="['/admin', item.rota]"
+            routerLinkActive="bg-[#255f49] text-white font-bold shadow-sm"
+            (click)="menuMobileAberto = false"
+            [title]="item.label"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-gray-300 hover:bg-white/10 font-medium transition-colors"
+            [class.justify-center]="emConfiguracion && !menuMobileAberto"
           >
-            Ver regla
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+                [attr.d]="item.icon"
+              />
+            </svg>
+            @if (!emConfiguracion || menuMobileAberto) {
+              <span class="truncate">{{ item.label }}</span>
+            }
+          </a>
+        }
+      </nav>
+    </div>
+
+    <div class="p-3 border-t border-white/10 flex flex-col gap-2.5">
+      @if (!emConfiguracion || menuMobileAberto) {
+        <div class="bg-black/20 rounded-xl px-3 py-2.5">
+          <p class="text-[9px] font-bold tracking-widest text-yellow-400 uppercase">
+            Número central
+          </p>
+          <p class="text-xs font-bold mt-0.5">+595 61 500 900</p>
+          <p class="text-[11px] text-green-400 flex items-center gap-1.5 mt-0.5">
+            <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span> Conectado
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2.5 px-1">
+          <div
+            class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center font-bold text-xs shrink-0"
+          >
+            {{ iniciais(usuarioNome) }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-bold truncate">{{ usuarioNome }}</p>
+            <p class="text-[10px] text-gray-300">Administrador</p>
+          </div>
+        </div>
+
+        <div class="flex gap-1 bg-black/20 rounded-lg p-1">
+          <button
+            (click)="idioma = 'ES'"
+            [ngClass]="idioma === 'ES' ? 'bg-white/20 text-white font-bold' : 'text-gray-300'"
+            class="flex-1 text-[11px] py-1 rounded"
+          >
+            ES
+          </button>
+          <button
+            (click)="idioma = 'PT'"
+            [ngClass]="idioma === 'PT' ? 'bg-white/20 text-white font-bold' : 'text-gray-300'"
+            class="flex-1 text-[11px] py-1 rounded"
+          >
+            PT
           </button>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-100 p-5 mt-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-bold text-gray-900">Ranking del equipo</h2>
-              <p class="text-sm text-gray-400">Ordenado por carga (atendimentos ativos)</p>
-            </div>
-            <span class="text-xs text-green-600 flex items-center gap-1">
-              <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> En vivo
-            </span>
-          </div>
+        <button
+          (click)="toggleTelaCheia()"
+          class="w-full text-left px-3 py-2 bg-white/10 hover:bg-white/15 text-gray-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-2"
+        >
+          <span>⛶</span>
+          <span>{{ emTelaCheia ? 'Salir de pantalla completa' : 'Pantalla completa' }}</span>
+        </button>
 
-          @if (carregandoRanking) {
-            <div class="py-8 text-center text-sm text-gray-400">Carregando ranking...</div>
-          } @else if (erroRanking) {
-            <div class="py-8 text-center text-sm text-red-500">Não foi possível carregar o ranking.</div>
-          } @else if (ranking.length === 0) {
-            <div class="py-8 text-center text-sm text-gray-400">
-              Nenhum vendedor cadastrado ainda. Quando houver vendedores no banco, eles aparecem aqui.
-            </div>
-          } @else {
-            <div class="mt-4 grid grid-cols-[auto_1fr_auto_auto] gap-x-4 text-[11px] font-bold text-gray-400 uppercase px-2 pb-2 border-b border-gray-100">
-              <span>#</span>
-              <span>Vendedor</span>
-              <span class="text-right">Ativas</span>
-              <span class="text-right">Setor</span>
-            </div>
-            @for (v of ranking; track v.id; let i = $index) {
-              <div class="grid grid-cols-[auto_1fr_auto_auto] gap-x-4 items-center px-2 py-3 border-b border-gray-50">
-                <span class="text-sm text-gray-400">{{ i + 1 }}</span>
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0">
-                    {{ iniciais(v.nome) }}
-                  </div>
-                  <span class="text-sm font-medium text-gray-900 truncate">{{ v.nome }}</span>
-                </div>
-                <span class="text-sm font-bold text-gray-900 text-right">{{ v.quantidadeAtendimentos }}</span>
-                <span class="text-right">
-                  <span class="text-[10px] font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded uppercase">{{ v.setor }}</span>
-                </span>
-              </div>
-            }
-          }
-        </div>
-      </div>
-    } @else if (secaoAtiva === 'configuracion') {
-      <div class="p-6 md:p-8">
-        <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Panel del gestor</p>
-        <h1 class="text-2xl font-bold text-gray-900">Usuarios y vendedores</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Registro del equipo, sector y carga. Datos de ejemplo donde falta endpoint.
-        </p>
+        <button
+          (click)="irParaVendedor()"
+          class="w-full text-left px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2"
+        >
+          <span>💬</span>
+          <span>Vista vendedor</span>
+        </button>
 
-        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Vendedores</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ totalVendedores }}</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Atenciones activas</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ totalAtivos }}</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Mayorista / Minorista</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">4 / 5</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">En línea ahora</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">—</p>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 p-5 mt-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-bold text-gray-900">Usuarios</h2>
-              <p class="text-sm text-gray-400">Sector y carga (atendimentos ativos)</p>
-            </div>
-            <button class="text-sm font-bold text-white bg-[#0a3a2a] rounded-lg px-3 py-1.5">
-              Nuevo usuario
-            </button>
-          </div>
-
-          @if (carregandoRanking) {
-            <div class="py-8 text-center text-sm text-gray-400">Carregando...</div>
-          } @else if (ranking.length === 0) {
-            <div class="py-8 text-center text-sm text-gray-400">
-              Nenhum vendedor cadastrado ainda.
-            </div>
-          } @else {
-            <div
-              class="mt-4 grid grid-cols-[1fr_auto_auto_auto] gap-x-4 text-[11px] font-bold text-gray-400 uppercase px-2 pb-2 border-b border-gray-100"
-            >
-              <span>Usuario</span>
-              <span class="text-right">Perfil</span>
-              <span class="text-right">Sector</span>
-              <span class="text-right">Ativas</span>
-            </div>
-            @for (v of ranking; track v.id) {
-              <div
-                class="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 items-center px-2 py-3 border-b border-gray-50"
-              >
-                <div class="flex items-center gap-3 min-w-0">
-                  <div
-                    class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0"
-                  >
-                    {{ iniciais(v.nome) }}
-                  </div>
-                  <span class="text-sm font-medium text-gray-900 truncate">{{ v.nome }}</span>
-                </div>
-                <span class="text-right text-sm text-gray-600">Vendedor</span>
-                <span class="text-right">
-                  <span class="text-[10px] font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded uppercase">{{ v.setor }}</span>
-                </span>
-                <span class="text-right text-sm font-bold text-gray-900">{{ v.quantidadeAtendimentos }}</span>
-              </div>
-            }
-          }
-        </div>
-      </div>
-    } @else if (secaoAtiva === 'conversaciones') {
-      <div class="p-6 md:p-8">
-        <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Supervisión</p>
-        <h1 class="text-2xl font-bold text-gray-900">Todas las conversaciones</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Vista completa de la operación. <span class="text-gray-400">(Datos de ejemplo)</span>
-        </p>
-
-        <div class="flex gap-2 mt-5">
-          <button class="px-3 py-1.5 text-sm rounded-lg bg-green-700 text-white font-medium">Todos</button>
-          <button class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600">Abiertas</button>
-          <button class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600">Fuera de SLA</button>
-          <button class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600">Cerradas</button>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 mt-4 overflow-hidden">
+        <button
+          (click)="sair()"
+          class="w-full text-left px-3 py-1.5 text-gray-300 hover:text-white text-xs font-medium transition-colors flex items-center gap-2"
+        >
+          <span>↪</span>
+          <span>Cerrar sesión</span>
+        </button>
+      } @else {
+        <div class="flex flex-col items-center gap-3">
           <div
-            class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.8fr] gap-x-4 text-[11px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
+            class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center font-bold text-xs"
+            [title]="usuarioNome"
           >
-            <span>Cliente</span>
-            <span>Sector</span>
-            <span>Vendedor</span>
-            <span>Último mensaje</span>
-            <span class="text-right">Esperando</span>
+            {{ iniciais(usuarioNome) }}
           </div>
-          @for (c of conversacionesEjemplo; track c.tel) {
-            <div
-              class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.8fr] gap-x-4 items-center px-5 py-3 border-b border-gray-50"
-            >
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0">
-                  {{ c.ini }}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-bold text-gray-900 truncate">{{ c.nome }}</p>
-                  <p class="text-[11px] text-gray-400">{{ c.tel }}</p>
-                </div>
-              </div>
-              <span>
-                <span
-                  class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
-                  [ngClass]="c.sector === 'Mayorista' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
-                  >{{ c.sector }}</span
-                >
-              </span>
-              <span class="text-sm text-gray-700 truncate">{{ c.vendedor }}</span>
-              <div class="min-w-0">
-                <p class="text-sm text-gray-600 truncate">{{ c.msg }}</p>
-                <p class="text-[11px] text-gray-400">{{ c.cat }}</p>
-              </div>
-              <span
-                class="text-right text-xs font-bold"
-                [ngClass]="c.atrasado ? 'text-red-500' : 'text-gray-400'"
-                >{{ c.espera }}</span
-              >
-            </div>
-          }
-        </div>
-      </div>
-    } @else if (secaoAtiva === 'clientes') {
-      <div class="p-6 md:p-8">
-        <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Cartera</p>
-        <h1 class="text-2xl font-bold text-gray-900">Clientes</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Base de clientes con el vendedor responsable. <span class="text-gray-400">(Datos de ejemplo)</span>
-        </p>
-
-        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Clientes registrados</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">29</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Mayoristas</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">14</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Minoristas</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">15</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">En conversación ahora</span>
-            <p class="text-3xl font-bold text-gray-900 mt-2">21</p>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 mt-4 overflow-hidden">
-          <div
-            class="grid grid-cols-[1.4fr_1fr_0.9fr_1.2fr_0.6fr_0.8fr] gap-x-4 text-[11px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
+          <button
+            (click)="toggleTelaCheia()"
+            title="Pantalla completa"
+            class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs"
           >
-            <span>Cliente</span>
-            <span>Ciudad</span>
-            <span>Sector</span>
-            <span>Vendedor</span>
-            <span class="text-right">Conv.</span>
-            <span class="text-right">Último</span>
-          </div>
-          @for (c of clientesEjemplo; track c.tel) {
-            <div
-              class="grid grid-cols-[1.4fr_1fr_0.9fr_1.2fr_0.6fr_0.8fr] gap-x-4 items-center px-5 py-3 border-b border-gray-50"
-            >
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0">
-                  {{ c.ini }}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-bold text-gray-900 truncate">{{ c.nome }}</p>
-                  <p class="text-[11px] text-gray-400">{{ c.tel }}</p>
-                </div>
-              </div>
-              <span class="text-sm text-gray-600 truncate">{{ c.ciudad }}</span>
-              <span>
-                <span
-                  class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
-                  [ngClass]="c.sector === 'Mayorista' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
-                  >{{ c.sector }}</span
-                >
-              </span>
-              <span class="text-sm text-gray-700 truncate">{{ c.vendedor }}</span>
-              <span class="text-right text-sm font-bold text-gray-900">{{ c.conv }}</span>
-              <span class="text-right text-[11px] text-gray-400">{{ c.ultimo }}</span>
-            </div>
-          }
-        </div>
-      </div>
-    } @else if (secaoAtiva === 'costos') {
-      <div class="p-6 md:p-8">
-        <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Control de gastos</p>
-        <h1 class="text-2xl font-bold text-gray-900">Costos de mensajes</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Gasto en plantillas de WhatsApp por categoría y vendedor.
-          <span class="text-gray-400">(Datos de ejemplo)</span>
-        </p>
-
-        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Gasto total</span>
-            <p class="text-2xl font-bold text-gray-900 mt-2">₲ 11.757.400</p>
-            <p class="text-xs text-gray-400 mt-1">Este mes</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Mensajes enviados</span>
-            <p class="text-2xl font-bold text-gray-900 mt-2">3.150</p>
-            <p class="text-xs text-gray-400 mt-1">plantillas de pago</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Costo promedio</span>
-            <p class="text-2xl font-bold text-gray-900 mt-2">₲ 3.733</p>
-            <p class="text-xs text-gray-400 mt-1">por mensaje</p>
-          </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5">
-            <span class="text-sm text-gray-500">Presupuesto del mes</span>
-            <p class="text-2xl font-bold text-gray-900 mt-2">68%</p>
-            <p class="text-xs text-gray-400 mt-1">₲ 11.757.400 de ₲ 16.000.000</p>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 p-5 mt-4">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">Gasto por categoría</h2>
-          @for (g of gastoCategoria; track g.nome) {
-            <div class="mb-4">
-              <div class="flex items-center justify-between text-sm">
-                <span class="font-medium text-gray-700">{{ g.nome }}</span>
-                <span class="font-bold text-gray-900">{{ g.valor }}</span>
-              </div>
-              <div class="w-full h-2 bg-gray-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="h-full rounded-full" [ngClass]="g.cor" [style.width.%]="g.pct"></div>
-              </div>
-              <div class="flex items-center justify-between text-[11px] text-gray-400 mt-1">
-                <span>{{ g.msgs }}</span>
-                <span>{{ g.pct }}%</span>
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 p-5 mt-4">
-          <h2 class="text-lg font-bold text-gray-900">Gasto por vendedor</h2>
-          <p class="text-sm text-gray-400 mb-4">Mensajes de pago enviados y costo acumulado</p>
-          <div
-            class="grid grid-cols-[1.6fr_0.6fr_0.6fr_0.6fr_0.7fr_1fr] gap-x-4 text-[11px] font-bold text-gray-400 uppercase px-2 pb-2 border-b border-gray-100"
+            ⛶
+          </button>
+          <button
+            (click)="sair()"
+            title="Cerrar sesión"
+            class="p-2 rounded-lg text-gray-300 hover:text-white text-xs"
           >
-            <span>Vendedor</span>
-            <span class="text-right">Mkt</span>
-            <span class="text-right">Util</span>
-            <span class="text-right">Auth</span>
-            <span class="text-right">Total</span>
-            <span class="text-right">Gasto</span>
-          </div>
-          @for (v of gastoVendedor; track v.ini) {
-            <div
-              class="grid grid-cols-[1.6fr_0.6fr_0.6fr_0.6fr_0.7fr_1fr] gap-x-4 items-center px-2 py-3 border-b border-gray-50"
-            >
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0">
-                  {{ v.ini }}
-                </div>
-                <span class="text-sm font-medium text-gray-900 truncate">{{ v.nome }}</span>
-              </div>
-              <span class="text-right text-sm text-orange-600">{{ v.mkt }}</span>
-              <span class="text-right text-sm text-green-700">{{ v.util }}</span>
-              <span class="text-right text-sm text-gray-600">{{ v.auth }}</span>
-              <span class="text-right text-sm font-bold text-gray-900">{{ v.total }}</span>
-              <span class="text-right text-sm font-bold text-gray-900">{{ v.gasto }}</span>
-            </div>
-          }
+            ↪
+          </button>
         </div>
-      </div>
-    } @else {
-      <div class="p-6 md:p-8">
-        <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Panel del gestor</p>
-        <h1 class="text-2xl font-bold text-gray-900">{{ tituloSecao() }}</h1>
-        <div class="mt-6 bg-white rounded-xl border border-gray-100 p-10 text-center text-gray-400">
-          Tela em construção — vamos montar nos próximos passos.
-        </div>
-      </div>
-    }
+      }
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO DOS MÓDULOS FILHOS -->
+  <main class="flex-1 overflow-y-auto flex">
+    <router-outlet></router-outlet>
   </main>
 </div>

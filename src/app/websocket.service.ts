@@ -11,20 +11,25 @@ import { API_CONFIG } from './api.config';
 export class WebsocketService {
   private platformId = inject(PLATFORM_ID);
   private stompClient: Client | null = null;
+
   public mensagens$ = new Subject<any>();
 
   constructor() {
-    // Só inicia se estiver no navegador (nunca no SSR da Vercel)
-    if (isPlatformBrowser(this.platformId)) {
-      this.inicializarCliente();
+    if (isPlatformBrowser(this.platformId) && localStorage.getItem('token')) {
+      this.conectar();
     }
   }
 
-  private inicializarCliente() {
+  conectar(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.stompClient?.active) return;
+
+    const token = localStorage.getItem('token');
+
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS(API_CONFIG.wsUrl),
+      connectHeaders: token ? { Authorization: `Bearer ${token.trim()}` } : {},
       reconnectDelay: 5000,
-      // Desativa logs poluídos em produção; ative apenas se precisar debugar
       debug: () => {},
     });
 
@@ -32,7 +37,11 @@ export class WebsocketService {
       console.log('🔌 [WEB] WebSocket conectado com sucesso!');
       this.stompClient?.subscribe('/topic/mensagens', (message: Message) => {
         if (message.body) {
-          this.mensagens$.next(JSON.parse(message.body));
+          try {
+            this.mensagens$.next(JSON.parse(message.body));
+          } catch (e) {
+            console.error('Erro ao ler JSON do WebSocket', e);
+          }
         }
       });
     };
@@ -42,5 +51,12 @@ export class WebsocketService {
     };
 
     this.stompClient.activate();
+  }
+
+  desconectar(): void {
+    if (this.stompClient) {
+      this.stompClient.deactivate();
+      this.stompClient = null;
+    }
   }
 }

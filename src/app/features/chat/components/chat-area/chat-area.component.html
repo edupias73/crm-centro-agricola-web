@@ -1,4 +1,7 @@
 <div class="h-full flex w-full bg-[#f8f9fa] relative overflow-hidden">
+  <!-- Input oculto para upload de fotos, vídeos, áudios e PDFs -->
+  <input #inputArquivo type="file" class="hidden" (change)="aoSelecionarArquivo($event)" />
+
   <!-- COLUNA CENTRAL: CHAT -->
   <div class="flex-1 flex flex-col h-full min-w-0">
     <!-- Header do Chat (Topo) -->
@@ -7,527 +10,919 @@
     >
       <div class="flex items-center gap-3 min-w-0">
         <div
-          class="w-10 h-10 rounded-full bg-green-50 text-green-700 border border-green-200 flex items-center justify-center font-bold text-sm shrink-0"
+          class="w-10 h-10 rounded-full bg-green-50 text-green-800 border border-green-200 flex items-center justify-center font-bold text-xs shrink-0"
         >
           {{ iniciais(selecionado?.nomeCliente) }}
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="text-sm font-bold text-gray-900 truncate">
-              {{ selecionado?.nomeCliente || 'Selecione um atendimento' }}
+              {{ selecionado?.nomeCliente || 'Seleccioná una atención' }}
             </h3>
-            <span
-              *ngIf="selecionado"
-              class="px-1.5 py-0.5 text-[9px] font-bold rounded uppercase shrink-0"
-              [ngClass]="{
-                'bg-green-100 text-green-800': selecionado.status === 'ABERTO',
-                'bg-red-100 text-red-800': selecionado.status === 'ATRASADO',
-                'bg-gray-100 text-gray-600': selecionado.status === 'FECHADO'
-              }"
-              >{{ selecionado?.status }}</span
-            >
-          </div>
-          <p *ngIf="selecionado" class="text-xs text-gray-500 mt-0.5 truncate">
-            {{ selecionado?.telefoneCliente }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Botões de Ação Direita -->
-      <div *ngIf="selecionado" class="flex items-center gap-2 shrink-0">
-        <div
-          class="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs text-gray-600 font-medium hidden sm:block"
-        >
-          4/40m
-        </div>
-
-        <!-- Botão Click-to-Call (Tigo) -->
-        <a
-          [href]="'tel:' + selecionado.telefoneCliente"
-          title="Ligar pela Tigo"
-          class="p-1.5 bg-white border border-gray-200 rounded hover:bg-green-50 hover:border-green-200 text-gray-600 hover:text-green-700 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-            ></path>
-          </svg>
-        </a>
-
-        <!-- Botão Transferir -->
-        <button
-          (click)="abrirTransferencia()"
-          title="Transferir atendimento"
-          class="p-1.5 bg-white border border-gray-200 rounded hover:bg-gray-50 text-gray-600 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-            ></path>
-          </svg>
-        </button>
-
-        <!-- Botão Cerrar -->
-        <button
-          *ngIf="selecionado.status !== 'FECHADO'"
-          (click)="fecharAtendimento()"
-          [disabled]="fechando"
-          class="px-3 py-1.5 bg-green-700 text-white rounded text-xs font-bold hover:bg-green-800 transition-colors shadow-sm disabled:opacity-50"
-        >
-          {{ fechando ? 'Cerrando...' : 'Cerrar' }}
-        </button>
-
-        <!-- BOTÃO FICHA DO CLIENTE (Ícone Split-Panel idêntico ao Mockup) -->
-        <button
-          (click)="toggleFichaCliente()"
-          title="Ficha del cliente"
-          [ngClass]="
-            fichaAberta
-              ? 'border-green-700 bg-green-50 text-green-700'
-              : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-          "
-          class="p-1.5 border rounded transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="2"></rect>
-            <line x1="15" y1="4" x2="15" y2="20" stroke-width="2"></line>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Alerta de Sistema WebSocket -->
-    <div
-      *ngIf="selecionado"
-      class="bg-green-50 border-b border-green-100 px-4 py-2 flex justify-between items-center shrink-0"
-    >
-      <div class="flex items-center gap-2 text-xs font-medium text-green-800">
-        <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-        Nuevo mensaje recibido por WebSocket
-      </div>
-      <span class="text-xs font-bold text-green-700">Marcar como leído</span>
-    </div>
-
-    <!-- Container de Mensagens Dinâmicas -->
-   <div #areaMensagens (scroll)="aoRolarChat($event)" class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4">
-      <!-- Estado vazio -->
-      <div
-        *ngIf="!selecionado"
-        class="flex-1 flex flex-col items-center justify-center text-center gap-3"
-      >
-        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-          <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 21l1.8-4A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-        </div>
-        <div>
-          <p class="text-sm font-medium text-gray-500">Nenhuma conversa aberta</p>
-          <p class="text-xs text-gray-400 mt-0.5">
-            Selecione um atendimento na lista à esquerda para começar.
-          </p>
-        </div>
-      </div>
-
-      <!-- Aviso do Sistema -->
-      <div class="flex justify-center mb-2" *ngIf="selecionado">
-        <span
-          class="bg-white border border-gray-200 text-gray-500 text-[10px] font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5"
-        >
-          <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-          Asignado por distribución · Sticky Session · {{ selecionado?.nomeCliente }}
-        </span>
-      </div>
-
-      <!-- Lista de Mensagens -->
-      <ng-container *ngFor="let msg of mensagens">
-        <!-- 1. AUDITORIA / SISTEMA -->
-        <div
-          *ngIf="msg.remetenteTipo === 'SISTEMA' || msg.tipoMensagem === 'AUDITORIA'"
-          class="flex justify-center my-1"
-        >
-          <div
-            class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-[11px] font-medium px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-2"
-          >
-            <span>🔒 {{ msg.conteudo }}</span>
-            <span class="text-[10px] text-yellow-600">{{ msg.hora }}</span>
-          </div>
-        </div>
-
-        <!-- 2. RECEBIDA (CLIENTE) -->
-        <div
-          *ngIf="msg.remetenteTipo === 'CLIENTE'"
-          class="flex flex-col self-start max-w-[85%] md:max-w-[65%]"
-        >
-          <div
-            class="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm border border-gray-100 text-sm text-gray-800"
-          >
-            {{ msg.conteudo }}
-            <div class="text-[10px] text-gray-400 text-right mt-1.5">{{ msg.hora }}</div>
-          </div>
-        </div>
-
-        <!-- 3. ENVIADA (VENDEDOR) -->
-        <div
-          *ngIf="
-            msg.remetenteTipo !== 'CLIENTE' &&
-            msg.remetenteTipo !== 'SISTEMA' &&
-            msg.tipoMensagem !== 'AUDITORIA'
-          "
-          class="flex flex-col self-end max-w-[85%] md:max-w-[65%]"
-        >
-          <div
-            class="bg-[#e7f5eb] p-3.5 rounded-xl rounded-tr-sm shadow-sm border border-[#d1e8d7] text-sm text-gray-800"
-          >
-            {{ msg.conteudo }}
-            <div class="flex justify-end items-center gap-1 mt-1.5">
-              <span class="text-[10px] text-gray-500">{{ msg.hora }}</span>
-              <svg
-                class="w-3.5 h-3.5 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            @if (selecionado) {
+              <span
+                class="px-2 py-0.5 text-[10px] font-bold rounded bg-green-50 text-green-800 uppercase shrink-0"
               >
+                {{ ficha?.tipoCliente || 'MINORISTA' }}
+              </span>
+            }
+          </div>
+          @if (selecionado) {
+            <p class="text-xs text-gray-500 mt-0.5 truncate">
+              {{ selecionado.telefoneCliente }} · en línea hace 1 min
+            </p>
+          }
+        </div>
+      </div>
+
+      <!-- Botões de Ação Direita (Idênticos às Fotos 1 e 2) -->
+      @if (selecionado) {
+        <div class="flex items-center gap-2 shrink-0">
+          @if (selecionado.status === 'FECHADO') {
+            <div
+              class="px-2.5 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs text-gray-600 font-semibold"
+            >
+              Cerrada
+            </div>
+          } @else {
+            <div
+              class="px-2.5 py-1 border rounded-lg text-xs font-semibold hidden sm:block"
+              [ngClass]="
+                minutosEsperaAtual >= slaMinutos
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : 'bg-gray-50 border-gray-200 text-gray-700'
+              "
+            >
+              {{ minutosEsperaAtual }}/{{ slaMinutos }}m
+            </div>
+          }
+
+          <!-- Botão Simular / Alternar Janela 24h (Útil para demonstrar a Foto 2 ao cliente) -->
+          <button
+            (click)="forcarJanela24hFechada = !forcarJanela24hFechada"
+            title="Alternar vista de Ventana 24h (Plantillas Meta)"
+            [ngClass]="
+              janela24hFechada
+                ? 'bg-amber-50 border-amber-300 text-amber-700'
+                : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+            "
+            class="px-2 py-1.5 border rounded-lg text-[11px] font-semibold transition-colors hidden lg:block"
+          >
+            24h
+          </button>
+
+          <!-- Botão Transferir (Controlado pela permissão do Admin) -->
+          @if (podeTransferir) {
+            <button
+              (click)="abrirTransferencia()"
+              title="Transferir atención"
+              class="p-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M5 13l4 4L19 7M5 13l4 4L19 7"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                 ></path>
               </svg>
-            </div>
+            </button>
+          }
+
+          <!-- Botão Cerrar -->
+          @if (selecionado.status !== 'FECHADO' && podeFechar) {
+            <button
+              (click)="iniciarFechamentoAtendimento()"
+              [disabled]="fechando"
+              class="px-3.5 py-1.5 bg-green-700 text-white rounded-lg text-xs font-bold hover:bg-green-800 transition-colors shadow-sm disabled:opacity-50"
+            >
+              {{ fechando ? 'Cerrando...' : 'Cerrar' }}
+            </button>
+          }
+
+          <!-- Botão Ficha do Cliente (Ícone Split-Panel) -->
+          <button
+            (click)="toggleFichaCliente()"
+            title="Ficha del cliente"
+            [ngClass]="
+              fichaAberta
+                ? 'border-green-700 bg-green-50 text-green-700'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+            "
+            class="p-1.5 border rounded-lg transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="2"></rect>
+              <line x1="15" y1="4" x2="15" y2="20" stroke-width="2"></line>
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Alerta de Sistema WebSocket (Foto 1) -->
+    @if (selecionado && alertaWsVisivel) {
+      <div
+        class="bg-green-50 border-b border-green-100 px-4 py-2 flex justify-between items-center shrink-0"
+      >
+        <div class="flex items-center gap-2 text-xs font-semibold text-green-800">
+          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          Nuevo mensaje recibido por WebSocket
+        </div>
+        <button
+          (click)="alertaWsVisivel = false"
+          class="text-xs font-bold text-green-700 hover:underline"
+        >
+          Marcar como leído
+        </button>
+      </div>
+    }
+
+    <!-- Container de Mensagens Dinâmicas -->
+    <div
+      #areaMensagens
+      (scroll)="aoRolarChat($event)"
+      class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3.5"
+    >
+      <!-- Estado vazio -->
+      @if (!selecionado) {
+        <div class="flex-1 flex flex-col items-center justify-center text-center gap-3">
+          <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg
+              class="w-8 h-8 text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 21l1.8-4A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500">Ninguna conversación seleccionada</p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              Elegí una atención en la lista de la izquierda para comenzar.
+            </p>
           </div>
         </div>
-      </ng-container>
-    </div>
+      }
 
-    <!-- Área de Input Dinâmica (Fundo) -->
-    <div *ngIf="selecionado" class="bg-white border-t border-gray-200 shrink-0 flex flex-col">
-      <!-- Chips (Respostas Rápidas) -->
-      <div class="px-4 pt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <button
-          (click)="usarRespostaRapida('Confirmo disponibilidad y te paso el presupuesto.')"
-          class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
-        >
-          Confirmo disponibilidad y te paso el pre...
-        </button>
-        <button
-          (click)="usarRespostaRapida('Te envío la propuesta en unos minutos.')"
-          class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
-        >
-          Te envío la propuesta en unos minutos.
-        </button>
-        <button
-          (click)="usarRespostaRapida('Entrega en 48 horas hábiles en tu zona.')"
-          class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
-        >
-          Entrega en 48 horas hábiles en tu zona.
-        </button>
-      </div>
-
-      <!-- Input Field -->
-      <div class="p-3 flex items-center gap-3">
-        <button
-          class="text-gray-400 hover:text-green-600 border border-gray-200 rounded p-1.5 shrink-0 bg-gray-50"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            ></path>
-          </svg>
-        </button>
-
-        <input
-          type="text"
-          [(ngModel)]="mensagemDigitada"
-          (keyup.enter)="enviarMensagem()"
-          class="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 shadow-sm"
-          placeholder="Escribí un mensaje..."
-        />
-
-        <button
-          (click)="enviarMensagem()"
-          [disabled]="enviando"
-          class="bg-green-700 hover:bg-green-800 text-white rounded-lg px-5 py-2 text-sm font-bold transition-colors shadow-sm shrink-0 disabled:opacity-50"
-        >
-          Enviar
-        </button>
-      </div>
-
-      <div class="px-4 pb-2 flex justify-between items-center text-[10px] text-gray-400">
-        <span>Se envía al WhatsApp del cliente desde el número central · +595 61 500 900</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- COLUNA DIREITA: FICHA DO CLIENTE (Idêntica ao Mockup) -->
-  <aside
-    *ngIf="selecionado && fichaAberta"
-    class="w-80 bg-white border-l border-gray-200 h-full overflow-y-auto shrink-0 flex flex-col z-20"
-  >
-    @if (carregandoFicha || !ficha) {
-      <div class="p-8 text-center text-sm text-gray-400">Cargando ficha del cliente...</div>
-    } @else {
-      <!-- Topo: Avatar Grande + Nome + Telefone + Badges -->
-      <div class="p-6 flex flex-col items-center border-b border-gray-100 relative">
-        <button
-          (click)="editandoFicha = !editandoFicha"
-          class="absolute top-4 right-4 text-xs font-medium text-green-700 hover:underline"
-        >
-          {{ editandoFicha ? 'Cancelar' : 'Editar' }}
-        </button>
-
-        <div
-          class="w-14 h-14 rounded-full bg-green-50 text-green-800 flex items-center justify-center font-bold text-lg mb-3"
-        >
-          {{ iniciais(ficha.nome) }}
-        </div>
-
-        @if (!editandoFicha) {
-          <h3 class="text-base font-bold text-gray-900 text-center">{{ ficha.nome }}</h3>
-        } @else {
-          <input
-            type="text"
-            [(ngModel)]="ficha.nome"
-            class="border border-gray-300 rounded px-2 py-1 text-sm text-center font-bold text-gray-900 w-full mb-1"
-            placeholder="Nombre del cliente"
-          />
-        }
-
-        <p class="text-xs text-gray-500 mt-0.5">{{ ficha.telefone }}</p>
-
-        <div class="flex items-center gap-2 mt-3">
-          @if (!editandoFicha) {
-            <span class="px-2.5 py-0.5 bg-green-50 text-green-800 text-[11px] font-semibold rounded">
-              {{ ficha.tipoCliente }}
+      <!-- Pílula Central de Atribuição / Fechamento (Fotos 1 e 2) -->
+      @if (selecionado && !carregandoHistorico) {
+        <div class="flex justify-center mb-1">
+          @if (selecionado.status === 'FECHADO') {
+            <span
+              class="bg-white border border-gray-200 text-gray-500 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-sm flex items-center gap-1.5"
+            >
+              <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+              Atención cerrada · motivo: {{ motivoFechamentoSelecionado }}
             </span>
           } @else {
-            <select
-              [(ngModel)]="ficha.tipoCliente"
-              class="border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-800"
+            <span
+              class="bg-white border border-gray-200 text-gray-500 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-sm flex items-center gap-1.5"
             >
-              <option value="Minorista">Minorista</option>
-              <option value="Mayorista">Mayorista</option>
-            </select>
+              <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+              Asignado por distribución · Sticky Session con {{ usuarioNome }}
+            </span>
           }
-          <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">
-            Cliente desde {{ anoCliente(ficha.clienteDesde) }}
-          </span>
         </div>
-      </div>
+      }
 
-      <!-- Seção 1: DATOS -->
-      <div class="p-5 border-b border-gray-100">
-        <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">Datos</p>
-
-        <div class="flex flex-col gap-2.5 text-xs">
-          <div class="flex justify-between items-center gap-2">
-            <span class="text-gray-500">Establecimiento</span>
-            @if (!editandoFicha) {
-              <span class="font-bold text-gray-900 text-right">{{ ficha.estabelecimento }}</span>
-            } @else {
-              <input
-                type="text"
-                [(ngModel)]="ficha.estabelecimento"
-                placeholder="Ej: Chacra San Ramón"
-                class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
-              />
-            }
+      <!-- SKELETON LOADER -->
+      @if (carregandoHistorico) {
+        <div class="flex flex-col gap-4 flex-1 py-2">
+          <div class="flex justify-start">
+            <div class="bg-gray-200 animate-pulse h-14 w-64 rounded-2xl rounded-tl-none"></div>
           </div>
-
-          <div class="flex justify-between items-center gap-2">
-            <span class="text-gray-500">Ciudad</span>
-            @if (!editandoFicha) {
-              <span class="font-bold text-gray-900 text-right">{{ ficha.cidade }}</span>
-            } @else {
-              <input
-                type="text"
-                [(ngModel)]="ficha.cidade"
-                placeholder="Ej: Minga Guazú"
-                class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
-              />
-            }
+          <div class="flex justify-end">
+            <div class="bg-green-100 animate-pulse h-16 w-72 rounded-2xl rounded-tr-none"></div>
           </div>
-
-          <div class="flex justify-between items-center gap-2">
-            <span class="text-gray-500">Cultivo</span>
-            @if (!editandoFicha) {
-              <span class="font-bold text-gray-900 text-right">{{ ficha.cultivo }}</span>
-            } @else {
-              <input
-                type="text"
-                [(ngModel)]="ficha.cultivo"
-                placeholder="Ej: Soja · 180 ha"
-                class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
-              />
-            }
+          <div class="flex justify-start">
+            <div class="bg-gray-200 animate-pulse h-10 w-48 rounded-2xl rounded-tl-none"></div>
           </div>
         </div>
-      </div>
+      }
 
-      <!-- Seção 2: INTERÉS ACTUAL -->
-      <div class="p-5 border-b border-gray-100">
-        <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">
-          Interés actual
-        </p>
-
-        @if (!editandoFicha) {
-          <div class="bg-gray-50 border border-gray-100 rounded-lg p-3">
-            <p class="text-xs font-bold text-gray-900">{{ ficha.interesseTitulo }}</p>
-            <p class="text-[11px] text-gray-500 mt-0.5">{{ ficha.interesseDetalhe }}</p>
-          </div>
-        } @else {
-          <div class="flex flex-col gap-2">
-            <input
-              type="text"
-              [(ngModel)]="ficha.interesseTitulo"
-              placeholder="Título (ej: Insumos para siembra)"
-              class="border border-gray-300 rounded px-2.5 py-1.5 text-xs w-full"
-            />
-            <input
-              type="text"
-              [(ngModel)]="ficha.interesseDetalhe"
-              placeholder="Detalle (ej: Consulta de precio)"
-              class="border border-gray-300 rounded px-2.5 py-1.5 text-xs w-full"
-            />
-            <button
-              (click)="salvarFichaCliente()"
-              [disabled]="salvandoFicha"
-              class="mt-1 w-full bg-green-700 hover:bg-green-800 text-white font-bold text-xs py-2 rounded-lg transition-colors"
-            >
-              {{ salvandoFicha ? 'Guardando...' : 'Guardar ficha' }}
-            </button>
-          </div>
-        }
-      </div>
-
-      <!-- Seção 3: HISTORIAL -->
-      <div class="p-5">
-        <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">Historial</p>
-
-        <div class="flex flex-col gap-3">
-          @for (h of ficha.historial; track h.atendimentoId) {
-            <div class="flex items-start gap-2.5">
-              <span class="w-2 h-2 rounded-full bg-green-600 mt-1 shrink-0"></span>
-              <div>
-                <p class="text-xs font-bold text-gray-900">{{ h.titulo }}</p>
-                <p class="text-[11px] text-gray-400">
-                  {{ formatarDataCurta(h.data) }} · {{ h.status | lowercase }}
-                </p>
+      <!-- Lista de Mensagens REAIS (Com suporte a Texto, Áudio, Foto, Vídeo e PDF) -->
+      @if (!carregandoHistorico) {
+        @for (msg of mensagens; track $index) {
+          <!-- 1. AUDITORIA / SISTEMA -->
+          @if (msg.remetenteTipo === 'SISTEMA' || msg.tipoMensagem === 'AUDITORIA') {
+            <div class="flex justify-center my-1">
+              <div
+                class="bg-white border border-gray-200 text-gray-600 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-sm flex items-center gap-2"
+              >
+                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                <span>{{ msg.conteudo }}</span>
+                <span class="text-[10px] text-gray-400">{{ msg.hora }}</span>
               </div>
             </div>
           }
+
+          <!-- 2. RECEBIDA (CLIENTE) -->
+          @if (msg.remetenteTipo === 'CLIENTE') {
+            <div class="flex flex-col self-start max-w-[85%] md:max-w-[65%]">
+              <div
+                class="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm border border-gray-200/80 text-sm text-gray-800"
+              >
+                <!-- Mídia: Imagem -->
+                @if (msg.tipoMensagem === 'IMAGEM' && msg.mediaUrl) {
+                  <img
+                    [src]="msg.mediaUrl"
+                    alt="Imagen"
+                    class="rounded-lg max-h-64 w-auto object-cover mb-2 border border-gray-100"
+                  />
+                }
+                <!-- Mídia: Vídeo -->
+                @if (msg.tipoMensagem === 'VIDEO' && msg.mediaUrl) {
+                  <video
+                    [src]="msg.mediaUrl"
+                    controls
+                    class="rounded-lg max-h-64 w-full mb-2 bg-black"
+                  ></video>
+                }
+                <!-- Mídia: Áudio -->
+                @if (msg.tipoMensagem === 'AUDIO') {
+                  @if (
+                    msg.mediaUrl &&
+                    (msg.mediaUrl.startsWith('data:') || msg.mediaUrl.startsWith('http'))
+                  ) {
+                    <audio [src]="msg.mediaUrl" controls class="w-60 sm:w-72 h-10 mb-1"></audio>
+                  } @else {
+                    <div
+                      class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-1"
+                    >
+                      <span class="text-lg">🎵</span>
+                      <span class="text-xs font-medium text-gray-700">Nota de voz de WhatsApp</span>
+                    </div>
+                  }
+                }
+                <!-- Mídia: Documento / PDF -->
+                @if (msg.tipoMensagem === 'DOCUMENTO') {
+                  <a
+                    [href]="msg.mediaUrl || '#'"
+                    [download]="msg.nomeArquivo || 'documento.pdf'"
+                    target="_blank"
+                    class="flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 p-2.5 rounded-lg border border-gray-200 mb-2 transition-colors"
+                  >
+                    <span class="text-xl">📄</span>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-xs font-bold text-gray-900 truncate">
+                        {{ msg.nomeArquivo || 'Documento adjunto' }}
+                      </p>
+                      <p class="text-[10px] text-green-700 font-semibold">Descargar archivo</p>
+                    </div>
+                  </a>
+                }
+
+                <p class="whitespace-pre-line leading-relaxed">{{ msg.conteudo }}</p>
+                <div class="text-[10px] text-gray-400 text-right mt-1">{{ msg.hora }}</div>
+              </div>
+            </div>
+          }
+
+          <!-- 3. ENVIADA (VENDEDOR / BOT) -->
+          @if (
+            msg.remetenteTipo !== 'CLIENTE' &&
+            msg.remetenteTipo !== 'SISTEMA' &&
+            msg.tipoMensagem !== 'AUDITORIA'
+          ) {
+            <div class="flex flex-col self-end max-w-[85%] md:max-w-[65%]">
+              <div
+                class="bg-[#e8f5e9] p-3.5 rounded-xl rounded-tr-sm shadow-sm border border-[#c8e6c9] text-sm text-gray-800"
+              >
+                <!-- Mídia: Imagem -->
+                @if (msg.tipoMensagem === 'IMAGEM' && msg.mediaUrl) {
+                  <img
+                    [src]="msg.mediaUrl"
+                    alt="Imagen enviada"
+                    class="rounded-lg max-h-64 w-auto object-cover mb-2 border border-green-200"
+                  />
+                }
+                <!-- Mídia: Vídeo -->
+                @if (msg.tipoMensagem === 'VIDEO' && msg.mediaUrl) {
+                  <video
+                    [src]="msg.mediaUrl"
+                    controls
+                    class="rounded-lg max-h-64 w-full mb-2 bg-black"
+                  ></video>
+                }
+                <!-- Mídia: Áudio -->
+                @if (msg.tipoMensagem === 'AUDIO' && msg.mediaUrl) {
+                  <audio [src]="msg.mediaUrl" controls class="w-60 sm:w-72 h-10 mb-1"></audio>
+                }
+                <!-- Mídia: Documento / PDF -->
+                @if (msg.tipoMensagem === 'DOCUMENTO') {
+                  <a
+                    [href]="msg.mediaUrl || '#'"
+                    [download]="msg.nomeArquivo || 'documento.pdf'"
+                    target="_blank"
+                    class="flex items-center gap-2.5 bg-white/80 hover:bg-white p-2.5 rounded-lg border border-green-200 mb-2 transition-colors"
+                  >
+                    <span class="text-xl">📄</span>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-xs font-bold text-gray-900 truncate">
+                        {{ msg.nomeArquivo || 'Documento enviado' }}
+                      </p>
+                      <p class="text-[10px] text-green-700 font-semibold">Abrir / Descargar</p>
+                    </div>
+                  </a>
+                }
+
+                <p class="whitespace-pre-line leading-relaxed">{{ msg.conteudo }}</p>
+                <div class="flex justify-end items-center gap-1 mt-1">
+                  <span class="text-[10px] text-gray-500">{{ msg.hora }}</span>
+                  <span class="text-[10px] font-bold text-green-700">✓✓</span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      }
+    </div>
+
+    <!-- RODAPÉ 1: JANELA DE 24H FECHADA (SELETOR DE PLANTILLAS - FOTO 2 E FOTO 4) -->
+    @if (selecionado && janela24hFechada) {
+      <div class="bg-white border-t border-gray-200 p-4 shrink-0">
+        <div class="border border-amber-200 bg-amber-50/40 rounded-xl p-4">
+          <div class="flex items-start gap-2.5 mb-3">
+            <span
+              class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5"
+            >
+              !
+            </span>
+            <div>
+              <h4 class="text-xs font-bold text-gray-900">Ventana de 24 h cerrada</h4>
+              <p class="text-xs text-gray-600 mt-0.5">
+                El cliente no escribió en las últimas 24 h. Para retomar el contacto, WhatsApp solo
+                permite enviar una plantilla aprobada por Meta.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+            @for (p of plantillas; track p.id) {
+              <label
+                (click)="plantillaSelecionada = p"
+                class="flex items-center justify-between p-2.5 rounded-lg border bg-white cursor-pointer transition-all"
+                [ngClass]="
+                  plantillaSelecionada?.id === p.id
+                    ? 'border-green-700 ring-1 ring-green-700 bg-green-50/20'
+                    : 'border-gray-200 hover:border-gray-300'
+                "
+              >
+                <div class="flex items-center gap-2.5 min-w-0 pr-3">
+                  <input
+                    type="radio"
+                    name="plantilla24h"
+                    [checked]="plantillaSelecionada?.id === p.id"
+                    class="text-green-700 focus:ring-green-600"
+                  />
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-900 font-mono">{{ p.nome }}</p>
+                    <p class="text-[11px] text-gray-500 truncate">{{ p.previa }}</p>
+                  </div>
+                </div>
+                <span class="text-xs font-bold text-gray-800 shrink-0">{{ p.custoGuaranies }}</span>
+              </label>
+            }
+          </div>
+
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-amber-200/60">
+            <span class="text-[11px] text-gray-500">
+              Elegí una plantilla aprobada para reabrir la conversación.
+            </span>
+            <button
+              (click)="enviarPlantillaReabertura()"
+              [disabled]="!plantillaSelecionada || enviando"
+              class="px-4 py-2 bg-[#0a3a2a] hover:bg-green-900 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
+            >
+              Enviar plantilla
+            </button>
+          </div>
+        </div>
+        <div class="pt-2 text-[10px] text-gray-400">
+          Se envía al WhatsApp del cliente desde el número central · +595 61 500 900
         </div>
       </div>
     }
-  </aside>
 
-  <!-- Modal de Transferência -->
-  <div
-    *ngIf="modalAberto"
-    class="absolute inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-  >
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col max-h-[90%]">
-      <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-        <h3 class="text-sm font-bold text-gray-900">Transferir atendimento</h3>
-        <button (click)="fecharTransferencia()" class="text-gray-400 hover:text-gray-600 text-lg">
-          ×
-        </button>
-      </div>
-
-      <div class="p-4 flex flex-col gap-3 overflow-y-auto">
-        <div>
-          <label class="text-xs font-medium text-gray-600">Setor</label>
-          <select
-            [(ngModel)]="setorTransferencia"
-            (ngModelChange)="carregarVendedores()"
-            class="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600"
+    <!-- RODAPÉ 2: ÁREA DE INPUT NORMAL COM ANEXOS E GRAVADOR DE ÁUDIO (FOTO 1) -->
+    @if (selecionado && !janela24hFechada) {
+      <div class="bg-white border-t border-gray-200 shrink-0 flex flex-col relative">
+        <!-- Menu Popover de Anexos (Fotos, Vídeos, PDFs, Áudios) -->
+        @if (menuAnexoAberto) {
+          <div
+            class="absolute bottom-20 left-4 bg-white border border-gray-200 rounded-xl shadow-lg p-2 flex flex-col gap-1 w-52 z-30"
           >
-            <option value="Atacado">Atacado</option>
-            <option value="Varejo">Varejo</option>
-          </select>
+            <button
+              (click)="abrirSeletorArquivo('image/*')"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+            >
+              <span>📷</span> Foto o imagen
+            </button>
+            <button
+              (click)="abrirSeletorArquivo('video/*')"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+            >
+              <span>🎬</span> Video (MP4)
+            </button>
+            <button
+              (click)="abrirSeletorArquivo('.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt')"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+            >
+              <span>📄</span> Documento / PDF
+            </button>
+            <button
+              (click)="abrirSeletorArquivo('audio/*')"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+            >
+              <span>🎵</span> Archivo de audio
+            </button>
+          </div>
+        }
+
+        <!-- Chips (Respostas Rápidas) -->
+        <div class="px-4 pt-2.5 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <button
+            (click)="usarRespostaRapida('Confirmo disponibilidad y te paso el presupuesto.')"
+            class="whitespace-nowrap px-3 py-1 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+          >
+            Confirmo disponibilidad y te paso el pre...
+          </button>
+          <button
+            (click)="usarRespostaRapida('Te envío la propuesta en unos minutos.')"
+            class="whitespace-nowrap px-3 py-1 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+          >
+            Te envío la propuesta en unos minutos.
+          </button>
+          <button
+            (click)="usarRespostaRapida('Entrega en 48 horas hábiles en tu zona.')"
+            class="whitespace-nowrap px-3 py-1 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
+          >
+            Entrega en 48 horas hábiles en tu zona.
+          </button>
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-gray-600">Vendedor de destino</label>
-          <div
-            class="mt-1 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto"
+        <!-- Barra de Entrada ou Gravador de Áudio -->
+        <div class="p-3 flex items-center gap-2.5">
+          <!-- Botão (+) de Anexos -->
+          <button
+            (click)="menuAnexoAberto = !menuAnexoAberto"
+            title="Adjuntar foto, video, PDF o audio"
+            class="text-gray-500 hover:text-green-700 border border-gray-200 rounded-lg p-2 shrink-0 bg-gray-50 transition-colors"
           >
-            <div *ngIf="carregandoVendedores" class="p-3 text-sm text-gray-400 text-center">
-              Carregando...
-            </div>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              ></path>
+            </svg>
+          </button>
+
+          @if (gravandoAudio) {
             <div
-              *ngIf="!carregandoVendedores && vendedores.length === 0"
-              class="p-3 text-sm text-gray-400 text-center"
+              class="flex-1 bg-red-50 border border-red-200 rounded-lg px-4 py-2 flex items-center justify-between text-xs text-red-700 font-semibold"
             >
-              Nenhum vendedor nesse setor.
-            </div>
-            <button
-              *ngFor="let v of vendedores"
-              (click)="destinoSelecionadoId = v.id"
-              class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50"
-              [class.bg-green-50]="destinoSelecionadoId === v.id"
-            >
-              <div>
-                <div class="text-sm font-medium text-gray-900">{{ v.nome }}</div>
-                <div class="text-[11px] text-gray-500">{{ v.setor }}</div>
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></span>
+                <span
+                  >Grabando nota de voz... {{ formatarTempoGravacao(tempoGravacaoSegundos) }}</span
+                >
               </div>
-              <span class="text-[11px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                {{ v.quantidadeAtendimentos }} na fila
-              </span>
+              <div class="flex items-center gap-3">
+                <button
+                  (click)="cancelarGravacaoAudio()"
+                  class="text-gray-500 hover:text-gray-800 font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  (click)="alternarGravacaoAudio()"
+                  class="px-3 py-1 bg-green-700 text-white rounded-md font-bold hover:bg-green-800"
+                >
+                  Enviar audio
+                </button>
+              </div>
+            </div>
+          } @else {
+            <input
+              type="text"
+              [(ngModel)]="mensagemDigitada"
+              (keyup.enter)="enviarMensagem()"
+              class="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+              placeholder="Escribí un mensaje..."
+            />
+
+            <!-- Botão Microfone (Gravar Nota de Voz) -->
+            <button
+              (click)="alternarGravacaoAudio()"
+              title="Grabar nota de voz"
+              class="p-2 border border-gray-200 rounded-lg text-gray-500 hover:text-green-700 hover:bg-green-50 transition-colors shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                ></path>
+              </svg>
             </button>
+
+            <button
+              (click)="enviarMensagem()"
+              [disabled]="enviando"
+              class="bg-[#0a3a2a] hover:bg-green-900 text-white rounded-lg px-5 py-2 text-sm font-bold transition-colors shadow-sm shrink-0 disabled:opacity-50"
+            >
+              Enviar
+            </button>
+          }
+        </div>
+
+        <div class="px-4 pb-2 flex justify-between items-center text-[10px] text-gray-400">
+          <span>Se envía al WhatsApp del cliente desde el número central · +595 61 500 900</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- COLUNA DIREITA: FICHA DO CLIENTE (FOTO 4 - RESPONSIVA NO CELULAR E DESKTOP) -->
+  @if (selecionado && fichaAberta) {
+    <aside
+      class="fixed inset-y-0 right-0 md:relative w-80 bg-white border-l border-gray-200 h-full overflow-y-auto shrink-0 flex flex-col z-30 shadow-xl md:shadow-none"
+    >
+      @if (carregandoFicha || !ficha) {
+        <div class="p-8 text-center text-sm text-gray-400">Cargando ficha del cliente...</div>
+      } @else {
+        <div class="p-6 flex flex-col items-center border-b border-gray-100 relative">
+          <button
+            (click)="fichaAberta = false"
+            class="md:hidden absolute top-4 left-4 text-xs text-gray-500 hover:text-gray-800"
+          >
+            ✕ Cerrar
+          </button>
+
+          <button
+            (click)="editandoFicha = !editandoFicha"
+            class="absolute top-4 right-4 text-xs font-medium text-green-700 hover:underline"
+          >
+            {{ editandoFicha ? 'Cancelar' : 'Editar' }}
+          </button>
+
+          <div
+            class="w-14 h-14 rounded-full bg-green-50 text-green-800 flex items-center justify-center font-bold text-lg mb-3"
+          >
+            {{ iniciais(ficha.nome) }}
+          </div>
+
+          @if (!editandoFicha) {
+            <h3 class="text-base font-bold text-gray-900 text-center">{{ ficha.nome }}</h3>
+          } @else {
+            <input
+              type="text"
+              [(ngModel)]="ficha.nome"
+              class="border border-gray-300 rounded px-2 py-1 text-sm text-center font-bold text-gray-900 w-full mb-1"
+              placeholder="Nombre del cliente"
+            />
+          }
+
+          <p class="text-xs text-gray-500 mt-0.5">{{ ficha.telefone }}</p>
+
+          <div class="flex items-center gap-2 mt-3">
+            @if (!editandoFicha) {
+              <span
+                class="px-2.5 py-0.5 bg-green-50 text-green-800 text-[11px] font-semibold rounded"
+              >
+                {{ ficha.tipoCliente }}
+              </span>
+            } @else {
+              <select
+                [(ngModel)]="ficha.tipoCliente"
+                class="border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-800"
+              >
+                <option value="Minorista">Minorista</option>
+                <option value="Mayorista">Mayorista</option>
+              </select>
+            }
+            <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">
+              Cliente desde {{ anoCliente(ficha.clienteDesde) }}
+            </span>
           </div>
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-gray-600">Motivo (opcional)</label>
-          <input
-            type="text"
-            [(ngModel)]="motivo"
-            class="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600"
-            placeholder="Ex.: cliente é do setor de atacado"
-          />
+        <!-- Seção 1: DATOS -->
+        <div class="p-5 border-b border-gray-100">
+          <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">Datos</p>
+
+          <div class="flex flex-col gap-2.5 text-xs">
+            <div class="flex justify-between items-center gap-2">
+              <span class="text-gray-500">Establecimiento</span>
+              @if (!editandoFicha) {
+                <span class="font-bold text-gray-900 text-right">{{ ficha.estabelecimento }}</span>
+              } @else {
+                <input
+                  type="text"
+                  [(ngModel)]="ficha.estabelecimento"
+                  placeholder="Ej: Chacra Los Cedrales"
+                  class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
+                />
+              }
+            </div>
+
+            <div class="flex justify-between items-center gap-2">
+              <span class="text-gray-500">Ciudad</span>
+              @if (!editandoFicha) {
+                <span class="font-bold text-gray-900 text-right">{{ ficha.cidade }}</span>
+              } @else {
+                <input
+                  type="text"
+                  [(ngModel)]="ficha.cidade"
+                  placeholder="Ej: Los Cedrales"
+                  class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
+                />
+              }
+            </div>
+
+            <div class="flex justify-between items-center gap-2">
+              <span class="text-gray-500">Cultivo</span>
+              @if (!editandoFicha) {
+                <span class="font-bold text-gray-900 text-right">{{ ficha.cultivo }}</span>
+              } @else {
+                <input
+                  type="text"
+                  [(ngModel)]="ficha.cultivo"
+                  placeholder="Ej: Soja · 90 ha"
+                  class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
+                />
+              }
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-gray-600">Nota interna (opcional)</label>
-          <input
-            type="text"
-            [(ngModel)]="notaInterna"
-            class="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600"
-            placeholder="Anotação para o histórico"
-          />
-        </div>
-      </div>
+        <!-- Seção 2: INTERÉS ACTUAL -->
+        <div class="p-5 border-b border-gray-100">
+          <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">
+            Interés actual
+          </p>
 
-      <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
-        <button
-          (click)="fecharTransferencia()"
-          class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-        >
-          Cancelar
-        </button>
-        <button
-          (click)="confirmarTransferencia()"
-          [disabled]="!destinoSelecionadoId || transferindo"
-          class="px-4 py-1.5 text-sm font-bold text-white bg-green-700 rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ transferindo ? 'Transferindo...' : 'Transferir' }}
-        </button>
+          @if (!editandoFicha) {
+            <div class="bg-gray-50 border border-gray-100 rounded-lg p-3">
+              <p class="text-xs font-bold text-gray-900">{{ ficha.interesseTitulo }}</p>
+              <p class="text-[11px] text-gray-500 mt-0.5">{{ ficha.interesseDetalhe }}</p>
+            </div>
+          } @else {
+            <div class="flex flex-col gap-2">
+              <input
+                type="text"
+                [(ngModel)]="ficha.interesseTitulo"
+                placeholder="Título (ej: Implementos)"
+                class="border border-gray-300 rounded px-2.5 py-1.5 text-xs w-full"
+              />
+              <input
+                type="text"
+                [(ngModel)]="ficha.interesseDetalhe"
+                placeholder="Detalle (ej: Compra cerrada en el día)"
+                class="border border-gray-300 rounded px-2.5 py-1.5 text-xs w-full"
+              />
+              <button
+                (click)="salvarFichaCliente()"
+                [disabled]="salvandoFicha"
+                class="mt-1 w-full bg-green-700 hover:bg-green-800 text-white font-bold text-xs py-2 rounded-lg transition-colors"
+              >
+                {{ salvandoFicha ? 'Guardando...' : 'Guardar ficha' }}
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Seção 3: HISTORIAL -->
+        <div class="p-5">
+          <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">Historial</p>
+
+          <div class="flex flex-col gap-3">
+            @for (h of ficha.historial; track h.atendimentoId) {
+              <div class="flex items-start gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-green-600 mt-1 shrink-0"></span>
+                <div>
+                  <p class="text-xs font-bold text-gray-900">{{ h.titulo }}</p>
+                  <p class="text-[11px] text-gray-400">
+                    {{ formatarDataCurta(h.data) }} · {{ h.status | lowercase }}
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </aside>
+  }
+
+  <!-- MODAL 1: TRANSFERIR ATENCIÓN (IDÊNTICO À FOTO 3) -->
+  @if (modalAberto) {
+    <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[92vh]">
+        <!-- Cabeçalho -->
+        <div class="px-6 py-4 flex items-start justify-between">
+          <div>
+            <h3 class="text-base font-bold text-gray-900">Transferir atención</h3>
+            <p class="text-xs text-gray-500 mt-0.5">
+              {{ selecionado?.nomeCliente }} · {{ selecionado?.telefoneCliente }} ·
+              {{ selecionado?.status === 'FECHADO' ? 'Atención cerrada' : 'Atención activa' }}
+            </p>
+          </div>
+          <button
+            (click)="fecharTransferencia()"
+            class="w-7 h-7 rounded-lg border border-gray-200 text-gray-400 hover:text-gray-600 flex items-center justify-center text-sm"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="px-6 pb-4 flex flex-col gap-4 overflow-y-auto">
+          <!-- MOTIVO (Chips) -->
+          <div>
+            <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase"
+              >Motivo</label
+            >
+            <div class="flex flex-wrap gap-2 mt-2">
+              @for (chip of motivosTransferenciaChips; track chip) {
+                <button
+                  type="button"
+                  (click)="selecionarChipMotivo(chip)"
+                  [ngClass]="
+                    motivo === chip
+                      ? 'border-green-700 bg-green-50/60 text-green-800 font-bold'
+                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 font-medium'
+                  "
+                  class="px-3 py-1.5 rounded-lg border text-xs transition-all"
+                >
+                  {{ chip }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- DESTINO (Ordenado por menor carga) -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase"
+                >Destino</label
+              >
+              <span class="text-[11px] text-gray-400">Ordenado por menor carga</span>
+            </div>
+
+            <div class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+              @if (carregandoVendedores) {
+                <div class="p-4 text-xs text-gray-400 text-center">
+                  Cargando vendedores en línea...
+                </div>
+              } @else if (vendedores.length === 0) {
+                <div class="p-4 text-xs text-gray-400 text-center">
+                  No hay vendedores en línea disponibles en este momento.
+                </div>
+              } @else {
+                @for (v of vendedores; track v.id; let i = $index) {
+                  <label
+                    (click)="destinoSelecionadoId = v.id"
+                    class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                    [ngClass]="
+                      destinoSelecionadoId === v.id
+                        ? 'border-green-700 bg-green-50/30 ring-1 ring-green-700'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    "
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div
+                        class="w-9 h-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs shrink-0"
+                      >
+                        {{ iniciais(v.nome) }}
+                      </div>
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-bold text-gray-900 truncate">{{ v.nome }}</span>
+                          @if (i === 0) {
+                            <span
+                              class="px-1.5 py-0.5 bg-green-100 text-green-800 text-[9px] font-bold rounded uppercase"
+                            >
+                              SUGERIDO
+                            </span>
+                          }
+                        </div>
+                        <p class="text-[11px] text-gray-500">
+                          {{ nomeSetorEspanhol(v.setor) }} · {{ v.quantidadeAtendimentos }} activas
+                          · responde en 2m
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0">
+                      <span
+                        class="px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-semibold rounded"
+                      >
+                        En línea
+                      </span>
+                      <input
+                        type="radio"
+                        name="destinoVendedor"
+                        [checked]="destinoSelecionadoId === v.id"
+                        class="text-green-700 focus:ring-green-600"
+                      />
+                    </div>
+                  </label>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- NOTA INTERNA -->
+          <div>
+            <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase"
+              >Nota interna</label
+            >
+            <input
+              type="text"
+              [(ngModel)]="notaInterna"
+              class="w-full mt-1.5 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-green-600"
+              placeholder="Contexto para el próximo vendedor"
+            />
+          </div>
+        </div>
+
+        <!-- Rodapé Modal -->
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+          <span class="text-xs text-gray-400">
+            {{
+              destinoSelecionadoId ? 'Vendedor seleccionado' : 'Elegí un destino para continuar.'
+            }}
+          </span>
+          <div class="flex items-center gap-2">
+            <button
+              (click)="fecharTransferencia()"
+              class="px-4 py-2 text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-xl"
+            >
+              Cancelar
+            </button>
+            <button
+              (click)="confirmarTransferencia()"
+              [disabled]="!destinoSelecionadoId || transferindo"
+              class="px-5 py-2 text-xs font-bold text-white bg-[#0a3a2a] rounded-xl hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {{ transferindo ? 'Transfiriendo...' : 'Transferir' }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  }
+
+  <!-- MODAL 2: TABULAÇÃO AO FECHAR ATENDIMENTO (TAGS Y CIERRES) -->
+  @if (modalFecharAberto) {
+    <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <h3 class="text-base font-bold text-gray-900">Cerrar atención</h3>
+        <p class="text-xs text-gray-500 mt-1">
+          Seleccioná el motivo de cierre para registrar en el historial:
+        </p>
+
+        <div class="flex flex-wrap gap-2 my-4">
+          @for (m of motivosCierreDisponiveis; track m) {
+            <button
+              type="button"
+              (click)="motivoFechamentoSelecionado = m"
+              [ngClass]="
+                motivoFechamentoSelecionado === m
+                  ? 'border-green-700 bg-green-50 text-green-800 font-bold'
+                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+              "
+              class="px-3 py-1.5 rounded-lg border text-xs transition-all"
+            >
+              {{ m }}
+            </button>
+          }
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <button
+            (click)="modalFecharAberto = false"
+            class="px-4 py-2 text-xs font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="confirmarFechamentoAtendimento()"
+            class="px-4 py-2 text-xs font-bold text-white bg-green-700 hover:bg-green-800 rounded-xl"
+          >
+            Confirmar cierre
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

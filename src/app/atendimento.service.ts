@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 export interface AtendimentoResumo {
   id: number;
@@ -7,18 +7,31 @@ export interface AtendimentoResumo {
   telefoneCliente: string;
   status: string;
   ultimaInteracao: string;
+  setor?: string;
+  categoria?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AtendimentoService {
-  private selecionadoSubject = new Subject<AtendimentoResumo>();
+  private selecionadoSubject = new BehaviorSubject<AtendimentoResumo | null>(null);
   selecionado$ = this.selecionadoSubject.asObservable();
+
+  private modoSidebarSubject = new BehaviorSubject<'ATENCIONES' | 'CLIENTES'>('ATENCIONES');
+  modoSidebar$ = this.modoSidebarSubject.asObservable();
 
   private recarregarSubject = new Subject<void>();
   recarregar$ = this.recarregarSubject.asObservable();
 
-  selecionar(atendimento: AtendimentoResumo) {
+  get selecionadoAtual(): AtendimentoResumo | null {
+    return this.selecionadoSubject.value;
+  }
+
+  selecionar(atendimento: AtendimentoResumo | null) {
     this.selecionadoSubject.next(atendimento);
+  }
+
+  mudarModoSidebar(modo: 'ATENCIONES' | 'CLIENTES') {
+    this.modoSidebarSubject.next(modo);
   }
 
   recarregarLista() {

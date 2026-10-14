@@ -1,11 +1,30 @@
-import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  PLATFORM_ID,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { API_CONFIG } from '../../../../api.config';
 import { AtendimentoService, AtendimentoResumo } from '../../../../atendimento.service';
 import { WebsocketService } from '../../../../websocket.service';
+import { ConfiguracaoService } from '../../../../configuracao.service';
+
+interface ClienteCarteira {
+  clienteId: number;
+  nome: string;
+  telefone: string;
+  ultimoContato: string;
+  ultimoAtendimentoId: number;
+  statusUltimoAtendimento: string;
+  totalAtendimentos: number;
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -14,34 +33,83 @@ import { WebsocketService } from '../../../../websocket.service';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private cdr = inject(ChangeDetectorRef);
   private atendimentoService = inject(AtendimentoService);
   private wsService = inject(WebsocketService);
+  private configService = inject(ConfiguracaoService);
 
+  modoSidebar: 'ATENCIONES' | 'CLIENTES' = 'ATENCIONES';
   abaAtiva: 'MEUS' | 'FILA' | 'FECHADOS' = 'MEUS';
 
   meusAtendimentos: AtendimentoResumo[] = [];
   filaAtendimentos: AtendimentoResumo[] = [];
   fechadosAtendimentos: AtendimentoResumo[] = [];
 
+  clientes: ClienteCarteira[] = [];
+  carregandoClientes = false;
+
   carregando = true;
   erro = false;
   selecionadoId: number | null = null;
   termoBusca = '';
+
+  slaMinutos = 40;
+  stickyAtiva = true;
+
+  private gatilhoRecarregar$ = new Subject<void>();
+  private subs = new Subscription();
 
   ngOnInit() {
     if (!isPlatformBrowser(this.platformId)) return;
 
     this.carregar(true);
 
-    // Recarrega silenciosamente quando uma ação ocorre (envio, transferência, fecho)
-    this.atendimentoService.recarregar$.subscribe(() => this.carregar(false));
+    this.subs.add(
+      this.configService.regras$.subscribe((regras) => {
+        this.slaMinutos = regras.tempoLimiteMinutos;
+        this.stickyAtiva = regras.stickySessionAtiva;
+        this.cdr.detectChanges();
+      }),
+    );
 
-    // Recarrega silenciosamente quando chega mensagem nova via WebSocket
-    this.wsService.mensagens$.subscribe(() => this.carregar(false));
+    this.subs.add(
+      this.atendimentoService.modoSidebar$.subscribe((modo) => {
+        this.modoSidebar = modo;
+        if (modo === 'CLIENTES') {
+          this.carregarMeusClientes();
+        }
+        this.cdr.detectChanges();
+      }),
+    );
+
+    this.subs.add(
+      this.atendimentoService.selecionado$.subscribe((sel) => {
+        this.selecionadoId = sel?.id ?? null;
+        this.cdr.detectChanges();
+      }),
+    );
+
+    this.subs.add(
+      this.gatilhoRecarregar$.pipe(debounceTime(350)).subscribe(() => {
+        this.carregar(false);
+        if (this.modoSidebar === 'CLIENTES') {
+          this.carregarMeusClientes();
+        }
+      }),
+    );
+
+    this.subs.add(
+      this.atendimentoService.recarregar$.subscribe(() => this.gatilhoRecarregar$.next()),
+    );
+
+    this.subs.add(this.wsService.mensagens$.subscribe(() => this.gatilhoRecarregar$.next()));
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
   }
 
   mudarAba(aba: 'MEUS' | 'FILA' | 'FECHADOS') {
@@ -68,12 +136,36 @@ export class SidebarComponent implements OnInit {
         this.filaAtendimentos = fila;
         this.fechadosAtendimentos = fechados;
         this.carregando = false;
+
+        if (!this.selecionadoId && this.meusAtendimentos.length > 0) {
+          this.abrir(this.meusAtendimentos[0]);
+        }
+
         this.cdr.detectChanges();
       },
       error: (e) => {
         console.error('Erro ao carregar atendimentos', e);
         this.erro = true;
         this.carregando = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  carregarMeusClientes() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.carregandoClientes = true;
+    this.cdr.detectChanges();
+
+    this.http.get<ClienteCarteira[]>(`${API_CONFIG.baseUrl}/api/clientes/meus`).subscribe({
+      next: (lista) => {
+        this.clientes = lista;
+        this.carregandoClientes = false;
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        console.error('Erro ao carregar clientes', e);
+        this.carregandoClientes = false;
         this.cdr.detectChanges();
       },
     });
@@ -89,7 +181,6 @@ export class SidebarComponent implements OnInit {
     const lista = this.listaDaAbaAtual;
     const termo = this.termoBusca.trim().toLowerCase();
     if (!termo) return lista;
-
     return lista.filter(
       (a) =>
         a.nomeCliente?.toLowerCase().includes(termo) ||
@@ -97,9 +188,43 @@ export class SidebarComponent implements OnInit {
     );
   }
 
+  get clientesFiltrados(): ClienteCarteira[] {
+    const termo = this.termoBusca.trim().toLowerCase();
+    if (!termo) return this.clientes;
+    return this.clientes.filter(
+      (c) => c.nome?.toLowerCase().includes(termo) || c.telefone?.toLowerCase().includes(termo),
+    );
+  }
+
   abrir(item: AtendimentoResumo) {
     this.selecionadoId = item.id;
     this.atendimentoService.selecionar(item);
+  }
+
+  abrirClienteDaCarteira(c: ClienteCarteira) {
+    this.selecionadoId = c.ultimoAtendimentoId;
+    this.atendimentoService.selecionar({
+      id: c.ultimoAtendimentoId,
+      nomeCliente: c.nome,
+      telefoneCliente: c.telefone,
+      status: c.statusUltimoAtendimento,
+      ultimaInteracao: c.ultimoContato,
+    });
+  }
+
+  minutosEspera(dataIso: string): number {
+    if (!dataIso) return 0;
+    const diff = Date.now() - new Date(dataIso).getTime();
+    return Math.max(0, Math.floor(diff / 60000));
+  }
+
+  nivelEspera(item: AtendimentoResumo): 'OK' | 'RISCO' | 'ATRASADO' | 'FECHADO' {
+    if (item.status === 'FECHADO') return 'FECHADO';
+    if (item.status === 'ATRASADO') return 'ATRASADO';
+    const min = this.minutosEspera(item.ultimaInteracao);
+    if (min >= this.slaMinutos) return 'ATRASADO';
+    if (min >= Math.floor(this.slaMinutos / 2)) return 'RISCO';
+    return 'OK';
   }
 
   iniciais(nome: string): string {

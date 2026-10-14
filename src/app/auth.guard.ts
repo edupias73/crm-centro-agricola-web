@@ -6,7 +6,6 @@ export const authGuard: CanActivateFn = (route, state) => {
   const platformId = inject(PLATFORM_ID);
   const router = inject(Router);
 
-  // No servidor (SSR), deixa passar e avalia no navegador
   if (!isPlatformBrowser(platformId)) {
     return true;
   }
@@ -18,21 +17,28 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   try {
-    // Decodifica o payload do JWT para ler o Perfil
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const dados = JSON.parse(atob(base64));
-    const perfil = dados.perfil;
+    const partes = token.split('.');
+    if (partes.length !== 3) {
+      throw new Error('Token JWT malformado');
+    }
 
-    // RBAC: Se a rota começar com /admin e o perfil NÃO for ADMIN, bloqueia e chuta pro chat
+    const base64 = partes[1].replace(/-/g, '+').replace(/_/g, '/');
+    const dados = JSON.parse(atob(base64));
+
+    if (dados.exp && dados.exp * 1000 <= Date.now()) {
+      localStorage.removeItem('token');
+      router.navigate(['/login']);
+      return false;
+    }
+
+    const perfil = dados.perfil;
     if (state.url.startsWith('/admin') && perfil !== 'ADMIN') {
-      console.warn('🔒 Acesso negado: Vendedor não pode acessar o painel Admin.');
       router.navigate(['/chat']);
       return false;
     }
 
     return true;
   } catch (e) {
-    console.error('Erro ao processar token no Guard', e);
     localStorage.removeItem('token');
     router.navigate(['/login']);
     return false;
