@@ -127,34 +127,35 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
 
   forcarJanela24hFechada = false;
   plantillaSelecionada: PlantillaMeta | null = null;
+// 1. Array plantillas atualizado com a tabela Meta de 01/10/2026 (Paraguai):
   plantillas: PlantillaMeta[] = [
     {
       id: 'promo_insumos_campana',
       nome: 'promo_insumos_campana',
       categoria: 'Marketing',
       previa: 'Hola {{1}}, ya está disponible la línea de insumos para la campaña. Respondé este mensaje y te paso precios.',
-      custoGuaranies: '₲ 4.900',
+      custoGuaranies: '₲ 580',
     },
     {
       id: 'recordatorio_pedido',
       nome: 'recordatorio_pedido',
       categoria: 'Utilidad',
       previa: 'Hola {{1}}, tu pedido {{2}} está listo para retirar en sucursal.',
-      custoGuaranies: '₲ 2.100',
+      custoGuaranies: '₲ 90',
     },
     {
       id: 'seguimiento_presupuesto',
       nome: 'seguimiento_presupuesto',
       categoria: 'Utilidad',
       previa: 'Hola {{1}}, ¿pudiste revisar el presupuesto que te enviamos?',
-      custoGuaranies: '₲ 2.100',
+      custoGuaranies: '₲ 90',
     },
     {
       id: 'codigo_acceso_crm',
       nome: 'codigo_acceso_crm',
       categoria: 'Autenticación',
       previa: 'Tu código de acceso es {{1}}. Vence en 10 minutos.',
-      custoGuaranies: '₲ 1.700',
+      custoGuaranies: '₲ 90',
     },
   ];
 
@@ -268,7 +269,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
           const idDaConversa = novaMensagem?.atendimentoId ?? novaMensagem?.atendimento?.id;
           if (!idDaConversa) return;
 
+        // 2. Dentro de this.wsService.mensagens$.subscribe:
           if (novaMensagem.tipoMensagem === 'SISTEMA_EVENTO') {
+            if (novaMensagem.conteudo === 'CONFIG_ATUALIZADA') {
+              this.configService.carregarSlaDoServidor();
+              return;
+            }
             if (this.selecionado && idDaConversa === this.selecionado.id && novaMensagem.conteudo === 'SLA_ATRASADO') {
               this.selecionado.status = 'ATRASADO';
               this.cdr.detectChanges();
@@ -722,6 +728,7 @@ get minutosEsperaAtual(): number {
     this.confirmarFechamentoAtendimento();
   }
 
+  // 3. Método confirmarFechamentoAtendimento enviando o motivo real para o MySQL:
   confirmarFechamentoAtendimento() {
     if (!this.selecionado || this.fechando) return;
     this.fechando = true;
@@ -729,7 +736,11 @@ get minutosEsperaAtual(): number {
     const id = this.selecionado.id;
 
     this.http
-      .post(`${API_CONFIG.baseUrl}/api/atendimentos/${id}/fechar`, {}, { responseType: 'text' })
+      .post(
+        `${API_CONFIG.baseUrl}/api/atendimentos/${id}/fechar`,
+        { motivo: this.motivoFechamentoSelecionado },
+        { responseType: 'text' },
+      )
       .subscribe({
         next: () => {
           this.fechando = false;

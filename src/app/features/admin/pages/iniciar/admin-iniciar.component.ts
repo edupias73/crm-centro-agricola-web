@@ -239,34 +239,34 @@ export class AdminIniciarComponent implements OnInit {
   mensagemSucesso = '';
   ultimoAtendimentoCriado: any = null;
 
-  plantillas = [
+ plantillas = [
     {
       id: 'promo_insumos_campana',
       nome: 'promo_insumos_campana',
-      categoria: 'Marketing',
-      custoFmt: '₲ 4.900',
+      categoria: 'Marketing · $0.0740 USD',
+      custoFmt: '₲ 580',
       previa:
         'Hola {{1}}, ya está disponible la línea de insumos para la campaña. Respondé este mensaje y te paso precios.',
     },
     {
       id: 'recordatorio_pedido',
       nome: 'recordatorio_pedido',
-      categoria: 'Utilidad',
-      custoFmt: '₲ 2.100',
+      categoria: 'Utilidad · $0.0113 USD',
+      custoFmt: '₲ 90',
       previa: 'Hola {{1}}, tu pedido está listo para retirar en sucursal.',
     },
     {
       id: 'seguimiento_presupuesto',
       nome: 'seguimiento_presupuesto',
-      categoria: 'Utilidad',
-      custoFmt: '₲ 2.100',
+      categoria: 'Utilidad · $0.0113 USD',
+      custoFmt: '₲ 90',
       previa: 'Hola {{1}}, ¿pudiste revisar el presupuesto que te enviamos?',
     },
     {
       id: 'codigo_acceso_crm',
       nome: 'codigo_acceso_crm',
-      categoria: 'Autenticación',
-      custoFmt: '₲ 1.700',
+      categoria: 'Autenticación · $0.0113 USD',
+      custoFmt: '₲ 90',
       previa: 'Tu código de acceso es {{1}}. Vence en 10 minutos.',
     },
   ];

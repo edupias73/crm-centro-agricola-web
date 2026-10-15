@@ -13,6 +13,39 @@ export interface ResumoOperacao {
   minoristas: number;
 }
 
+export interface CustoVendedor {
+  id: number;
+  nome: string;
+  email: string;
+  sector: string;
+  mkt: number;
+  util: number;
+  auth: number;
+  servico24h: number;
+  totalMensagens: number;
+  gastoPlantillasGuaranies: number;
+}
+
+export interface RelatorioCustosMeta {
+  gastoTotalGuaranies: number;
+  totalMensagensEnviadas: number;
+  totalMensagensPagas: number;
+  custoMedioPorMensagemPaga: number;
+  orcamentoMensalGuaranies: number;
+  franquiaMensalServico: number;
+  servicoTotalEnviadas: number;
+  servicoGratisUsadas: number;
+  servicoExcedenteCobradas: number;
+  custoServicoGuaranies: number;
+  mktCount: number;
+  custoMktGuaranies: number;
+  utilCount: number;
+  custoUtilGuaranies: number;
+  authCount: number;
+  custoAuthGuaranies: number;
+  porVendedor: CustoVendedor[];
+}
+
 export interface ConversaSupervisao {
   id: number;
   nome: string;
@@ -83,6 +116,10 @@ export class AdminApiService {
 
   obterResumo(): Observable<ResumoOperacao> {
     return this.http.get<ResumoOperacao>(`${this.base}/api/admin/resumo`);
+  }
+
+  obterCustosMeta(periodo: 'MES' | 'ANTERIOR' | 'ANO' = 'MES'): Observable<RelatorioCustosMeta> {
+    return this.http.get<RelatorioCustosMeta>(`${this.base}/api/admin/custos?periodo=${periodo}`);
   }
 
   listarConversas(): Observable<ConversaSupervisao[]> {

@@ -323,8 +323,7 @@ export class AdminMarketingComponent implements OnInit {
     'Hola {{cliente}}, ya está disponible la línea de insumos para la campaña. Respondé este mensaje y te paso precios.';
   variaveisDisponiveis = ['{{cliente}}', '{{vendedor}}'];
   publico: 'TODOS' | 'MAYORISTAS' | 'MINORISTAS' = 'TODOS';
-  tarifaUnitaria = 4900;
-
+  tarifaUnitaria = 580; // $0.0740 USD por mensagem de Marketing no Paraguai 
   disparando = false;
   avisoSucesso = '';
   historico: CampanhaHistorico[] = [];

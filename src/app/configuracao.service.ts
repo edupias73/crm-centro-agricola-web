@@ -7,7 +7,23 @@ import { API_CONFIG } from './api.config';
 export interface ConfiguracaoSlaBackend {
   id?: number;
   tempoLimiteMinutos: number;
+  primeiraRespostaMinutos?: number;
+  ociosidadeMinutos?: number;
+  toleranciaForaExpedienteMinutos?: number;
   transbordoAutomatico: boolean;
+  stickySessionAtiva?: boolean;
+  duracaoStickyDias?: number;
+  maximoAtendimentosPorVendedor?: number;
+  respeitarSetorCliente?: boolean;
+  bloquearDesconectados?: boolean;
+  vendedorPodeTransferir?: boolean;
+  vendedorPodeFechar?: boolean;
+  exigirMotivoTransferencia?: boolean;
+  cierreObligatorioConMotivo?: boolean;
+  motivosCierreLista?: string;
+  msgSaludoInicial?: string;
+  msgConfirmacionAsignacion?: string;
+  orcamentoMensalGuaranies?: number;
   ativo: boolean;
   atualizadoEm?: string;
 }
@@ -28,6 +44,9 @@ export interface RegrasOperacionais {
   exigirMotivoTransferencia: boolean;
   cierreObligatorioConMotivo: boolean;
   motivosCierre: string[];
+  msgSaludoInicial?: string;
+  msgConfirmacionAsignacion?: string;
+  orcamentoMensalGuaranies?: number;
 }
 
 const CHAVE_STORAGE = 'crm_regras_operacionais_v1';
@@ -55,6 +74,11 @@ const REGRAS_PADRAO: RegrasOperacionais = {
     'Solo consulta técnica',
     'Precio no aceptado',
   ],
+  msgSaludoInicial:
+    '¡Hola! Bienvenido a Centro Agrícola. 🌾\nPor favor, elegí una opción:\n\n1 - Mayorista (Atacado)\n2 - Minorista (Varejo)',
+  msgConfirmacionAsignacion:
+    '✅ ¡Todo listo! Te va a atender {{vendedor}}, de nuestro equipo de {{sector}}. En breve te responde.',
+  orcamentoMensalGuaranies: 2000000,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -79,9 +103,41 @@ export class ConfiguracaoService {
         return { ...REGRAS_PADRAO, ...JSON.parse(salvo) };
       }
     } catch {
-      // Ignora erro de parse e usa padrão
+      // Usa padrão se falhar leitura
     }
     return { ...REGRAS_PADRAO };
+  }
+
+  private aplicarDadosDoBackend(sla: ConfiguracaoSlaBackend): void {
+    if (!sla) return;
+    const motivos = sla.motivosCierreLista
+      ? sla.motivosCierreLista
+          .split('|')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      : this.regrasSubject.value.motivosCierre;
+
+    this.atualizarRegrasLocais({
+      tempoLimiteMinutos: sla.tempoLimiteMinutos ?? 40,
+      primeiraRespostaMinutos: sla.primeiraRespostaMinutos ?? 5,
+      ociosidadeMinutos: sla.ociosidadeMinutos ?? 15,
+      toleranciaForaExpedienteMinutos: sla.toleranciaForaExpedienteMinutos ?? 90,
+      transbordoAutomatico: sla.transbordoAutomatico ?? true,
+      stickySessionAtiva: sla.stickySessionAtiva ?? true,
+      duracaoStickyDias: sla.duracaoStickyDias ?? 30,
+      maximoAtendimentosPorVendedor: sla.maximoAtendimentosPorVendedor ?? 6,
+      respeitarSetorCliente: sla.respeitarSetorCliente ?? true,
+      bloquearDesconectados: sla.bloquearDesconectados ?? false,
+      vendedorPodeTransferir: sla.vendedorPodeTransferir ?? true,
+      vendedorPodeFechar: sla.vendedorPodeFechar ?? true,
+      exigirMotivoTransferencia: sla.exigirMotivoTransferencia ?? true,
+      cierreObligatorioConMotivo: sla.cierreObligatorioConMotivo ?? true,
+      motivosCierre: motivos.length > 0 ? motivos : REGRAS_PADRAO.motivosCierre,
+      msgSaludoInicial: sla.msgSaludoInicial ?? REGRAS_PADRAO.msgSaludoInicial,
+      msgConfirmacionAsignacion:
+        sla.msgConfirmacionAsignacion ?? REGRAS_PADRAO.msgConfirmacionAsignacion,
+      orcamentoMensalGuaranies: sla.orcamentoMensalGuaranies ?? 2000000,
+    });
   }
 
   carregarSlaDoServidor(): void {
@@ -90,17 +146,8 @@ export class ConfiguracaoService {
     if (!token) return;
 
     this.http.get<ConfiguracaoSlaBackend>(`${API_CONFIG.baseUrl}/api/configuracoes/sla`).subscribe({
-      next: (sla) => {
-        if (sla && typeof sla.tempoLimiteMinutos === 'number') {
-          this.atualizarRegrasLocais({
-            tempoLimiteMinutos: sla.tempoLimiteMinutos,
-            transbordoAutomatico: sla.transbordoAutomatico ?? true,
-          });
-        }
-      },
-      error: () => {
-        // Mantém configuração local se o endpoint ainda estiver subindo
-      },
+      next: (sla) => this.aplicarDadosDoBackend(sla),
+      error: () => {},
     });
   }
 
@@ -110,22 +157,29 @@ export class ConfiguracaoService {
 
     const payload: ConfiguracaoSlaBackend = {
       tempoLimiteMinutos: atual.tempoLimiteMinutos,
+      primeiraRespostaMinutos: atual.primeiraRespostaMinutos,
+      ociosidadeMinutos: atual.ociosidadeMinutos,
+      toleranciaForaExpedienteMinutos: atual.toleranciaForaExpedienteMinutos,
       transbordoAutomatico: atual.transbordoAutomatico,
+      stickySessionAtiva: atual.stickySessionAtiva,
+      duracaoStickyDias: atual.duracaoStickyDias,
+      maximoAtendimentosPorVendedor: atual.maximoAtendimentosPorVendedor,
+      respeitarSetorCliente: atual.respeitarSetorCliente,
+      bloquearDesconectados: atual.bloquearDesconectados,
+      vendedorPodeTransferir: atual.vendedorPodeTransferir,
+      vendedorPodeFechar: atual.vendedorPodeFechar,
+      exigirMotivoTransferencia: atual.exigirMotivoTransferencia,
+      cierreObligatorioConMotivo: atual.cierreObligatorioConMotivo,
+      motivosCierreLista: (atual.motivosCierre || []).join('|'),
+      msgSaludoInicial: atual.msgSaludoInicial,
+      msgConfirmacionAsignacion: atual.msgConfirmacionAsignacion,
+      orcamentoMensalGuaranies: atual.orcamentoMensalGuaranies,
       ativo: true,
     };
 
     return this.http
       .put<ConfiguracaoSlaBackend>(`${API_CONFIG.baseUrl}/api/configuracoes/sla`, payload)
-      .pipe(
-        tap((resp) => {
-          if (resp && typeof resp.tempoLimiteMinutos === 'number') {
-            this.atualizarRegrasLocais({
-              tempoLimiteMinutos: resp.tempoLimiteMinutos,
-              transbordoAutomatico: resp.transbordoAutomatico,
-            });
-          }
-        }),
-      );
+      .pipe(tap((resp) => this.aplicarDadosDoBackend(resp)));
   }
 
   atualizarRegrasLocais(parcial: Partial<RegrasOperacionais>): void {

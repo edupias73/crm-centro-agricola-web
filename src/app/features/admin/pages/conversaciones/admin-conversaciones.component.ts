@@ -14,27 +14,29 @@ import { WebsocketService } from '../../../../websocket.service';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
-      <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Supervisión</p>
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-1">
+      <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Supervisión en vivo</p>
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mt-1">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Todas las conversaciones</h1>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            Todas las conversaciones
+          </h1>
           <p class="text-xs text-gray-500 mt-1">
-            Vista completa de la operación en vivo desde MySQL · Actualización automática
+            Monitoreo en tiempo real de toda la operación conectada a MySQL.
           </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
           <input
             type="text"
             [(ngModel)]="busca"
             placeholder="Buscar cliente, teléfono o vendedor..."
-            class="bg-white border border-gray-200 rounded-lg px-3.5 py-2 text-xs w-64 focus:outline-none focus:border-green-700"
+            class="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs w-full sm:w-64 shadow-2xs focus:outline-none focus:border-green-700"
           />
-          <div class="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs">
+          <div class="flex items-center bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs shadow-2xs">
             <span class="text-gray-400 font-bold uppercase mr-2">Vendedor</span>
             <select
               [(ngModel)]="filtroVendedor"
-              class="bg-transparent font-semibold text-gray-800 focus:outline-none"
+              class="bg-transparent font-bold text-gray-800 focus:outline-none w-full"
             >
               <option value="TODOS">Todos</option>
               <option value="Sin asignar">Sin asignar (Fila)</option>
@@ -46,16 +48,17 @@ import { WebsocketService } from '../../../../websocket.service';
         </div>
       </div>
 
+      <!-- Filtros Rápidos -->
       <div class="flex items-center justify-between flex-wrap gap-3 mt-5">
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           <button
             (click)="filtroStatus = 'TODOS'"
             [ngClass]="
               filtroStatus === 'TODOS'
-                ? 'border-green-700 bg-green-50 text-green-800 font-bold'
-                : 'border-gray-200 bg-white text-gray-600'
+                ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold shadow-2xs'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
             "
-            class="px-3.5 py-1.5 text-xs rounded-lg border transition-all"
+            class="px-3.5 py-1.5 text-xs rounded-xl border transition-all whitespace-nowrap"
           >
             Todos
           </button>
@@ -63,10 +66,10 @@ import { WebsocketService } from '../../../../websocket.service';
             (click)="filtroStatus = 'ABIERTAS'"
             [ngClass]="
               filtroStatus === 'ABIERTAS'
-                ? 'border-green-700 bg-green-50 text-green-800 font-bold'
-                : 'border-gray-200 bg-white text-gray-600'
+                ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold shadow-2xs'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
             "
-            class="px-3.5 py-1.5 text-xs rounded-lg border transition-all"
+            class="px-3.5 py-1.5 text-xs rounded-xl border transition-all whitespace-nowrap"
           >
             Abiertas
           </button>
@@ -74,10 +77,10 @@ import { WebsocketService } from '../../../../websocket.service';
             (click)="filtroStatus = 'SLA'"
             [ngClass]="
               filtroStatus === 'SLA'
-                ? 'border-green-700 bg-green-50 text-green-800 font-bold'
-                : 'border-gray-200 bg-white text-gray-600'
+                ? 'border-red-600 bg-red-600 text-white font-bold shadow-2xs'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
             "
-            class="px-3.5 py-1.5 text-xs rounded-lg border transition-all"
+            class="px-3.5 py-1.5 text-xs rounded-xl border transition-all whitespace-nowrap"
           >
             Fuera de SLA
           </button>
@@ -85,56 +88,163 @@ import { WebsocketService } from '../../../../websocket.service';
             (click)="filtroStatus = 'CERRADAS'"
             [ngClass]="
               filtroStatus === 'CERRADAS'
-                ? 'border-green-700 bg-green-50 text-green-800 font-bold'
-                : 'border-gray-200 bg-white text-gray-600'
+                ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold shadow-2xs'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
             "
-            class="px-3.5 py-1.5 text-xs rounded-lg border transition-all"
+            class="px-3.5 py-1.5 text-xs rounded-xl border transition-all whitespace-nowrap"
           >
             Cerradas
           </button>
         </div>
-        <span class="text-xs text-gray-400">
+        <span class="text-xs font-medium text-gray-400">
           {{ conversasFiltradas.length }} de {{ conversas.length }} conversaciones
         </span>
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200/80 mt-4 shadow-sm overflow-x-auto">
-        @if (carregando) {
-          <div class="p-8 text-center text-xs text-gray-400">Cargando conversaciones reales...</div>
-        } @else if (conversasFiltradas.length === 0) {
-          <div class="p-8 text-center text-xs text-gray-400">
-            Ninguna conversación encontrada con estos filtros.
+      @if (carregando) {
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-10 mt-4 text-center text-xs text-gray-400">
+          Cargando conversaciones reales...
+        </div>
+      } @else if (conversasFiltradas.length === 0) {
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-10 mt-4 text-center text-xs text-gray-400">
+          Ninguna conversación encontrada con estos filtros.
+        </div>
+      } @else {
+        <!-- VISTA DESKTOP (Tabela Completa) -->
+        <div class="hidden md:block bg-white rounded-2xl border border-gray-200/80 mt-4 shadow-xs overflow-hidden">
+          <div
+            class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.9fr_90px] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3.5 border-b border-gray-100 bg-gray-50/50"
+          >
+            <span>Cliente</span>
+            <span>Sector</span>
+            <span>Vendedor</span>
+            <span>Último mensaje</span>
+            <span>Estado / SLA</span>
+            <span class="text-right">Acción</span>
           </div>
-        } @else {
-          <div class="min-w-[760px]">
-            <div
-              class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.8fr_80px] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
-            >
-              <span>Cliente</span>
-              <span>Sector</span>
-              <span>Vendedor</span>
-              <span>Último mensaje</span>
-              <span>Estado / SLA</span>
-              <span class="text-right"></span>
-            </div>
 
-            @for (c of conversasFiltradas; track c.id) {
-              <div
-                class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.8fr_80px] gap-x-4 items-center px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/60"
-              >
+          @for (c of conversasFiltradas; track c.id) {
+            <div
+              class="grid grid-cols-[1.4fr_0.8fr_1.2fr_2fr_0.9fr_90px] gap-x-4 items-center px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/70 transition-colors"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="w-9 h-9 rounded-full bg-green-50 text-green-800 border border-green-200/60 flex items-center justify-center font-bold text-xs shrink-0"
+                >
+                  {{ iniciais(c.nome) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-gray-900 truncate">{{ c.nome }}</p>
+                  <p class="text-[11px] text-gray-400">{{ c.tel }}</p>
+                </div>
+              </div>
+
+              <div>
+                <span
+                  class="text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase"
+                  [ngClass]="
+                    c.sector === 'Mayorista'
+                      ? 'bg-amber-50 text-amber-800 border border-amber-200/60'
+                      : 'bg-green-50 text-green-800 border border-green-200/60'
+                  "
+                >
+                  {{ c.sector }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2 min-w-0">
+                <span
+                  class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold flex items-center justify-center shrink-0"
+                >
+                  {{ c.vendedor === 'Sin asignar' ? '—' : iniciais(c.vendedor) }}
+                </span>
+                <span class="text-xs font-medium text-gray-700 truncate">{{ c.vendedor }}</span>
+              </div>
+
+              <div class="min-w-0">
+                <p class="text-xs text-gray-700 truncate">{{ c.msg }}</p>
+                <p class="text-[11px] text-gray-400">{{ c.hora }} · {{ c.cat }}</p>
+              </div>
+
+              <div>
+                @if (c.status === 'FECHADO') {
+                  <span class="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-500">
+                    cerrada
+                  </span>
+                } @else if (c.status === 'RESPONDIDO') {
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-green-50 text-green-700">
+                    ✓ respondido
+                  </span>
+                } @else if (c.status === 'ATRASADO' || c.esperaMin >= limiteSla) {
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-red-50 text-red-600">
+                    ⏱ {{ c.esperaMin }} min
+                  </span>
+                } @else if (c.esperaMin >= metadeSla) {
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-amber-50 text-amber-700">
+                    {{ c.esperaMin }} min
+                  </span>
+                } @else {
+                  <span class="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-600">
+                    {{ c.esperaMin }} min
+                  </span>
+                }
+              </div>
+
+              <div class="text-right">
+                <button
+                  (click)="abrirNoChat(c)"
+                  class="px-3.5 py-1.5 text-xs font-bold text-[#0a3a2a] bg-green-50/70 hover:bg-green-100 border border-green-200/70 rounded-xl transition-colors"
+                >
+                  Abrir
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- VISTA MOBILE (Cartões Empilhados para Telemóvel) -->
+        <div class="md:hidden flex flex-col gap-3 mt-4">
+          @for (c of conversasFiltradas; track c.id) {
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex flex-col gap-3">
+              <div class="flex items-start justify-between gap-2">
                 <div class="flex items-center gap-3 min-w-0">
                   <div
-                    class="w-9 h-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs shrink-0"
+                    class="w-10 h-10 rounded-full bg-[#0a3a2a] text-white flex items-center justify-center font-bold text-xs shrink-0"
                   >
                     {{ iniciais(c.nome) }}
                   </div>
                   <div class="min-w-0">
-                    <p class="text-xs font-bold text-gray-900 truncate">{{ c.nome }}</p>
-                    <p class="text-[11px] text-gray-400">{{ c.tel }}</p>
+                    <p class="text-sm font-bold text-gray-900 truncate">{{ c.nome }}</p>
+                    <p class="text-xs text-gray-400">{{ c.tel }}</p>
                   </div>
                 </div>
 
-                <div>
+                @if (c.status === 'FECHADO') {
+                  <span class="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-500 shrink-0">
+                    cerrada
+                  </span>
+                } @else if (c.status === 'RESPONDIDO') {
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-green-50 text-green-700 shrink-0">
+                    ✓ respondido
+                  </span>
+                } @else if (c.status === 'ATRASADO' || c.esperaMin >= limiteSla) {
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-red-50 text-red-600 shrink-0">
+                    ⏱ {{ c.esperaMin }} min
+                  </span>
+                } @else {
+                  <span class="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-600 shrink-0">
+                    {{ c.esperaMin }} min
+                  </span>
+                }
+              </div>
+
+              <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p class="text-xs text-gray-700 line-clamp-2">{{ c.msg }}</p>
+                <p class="text-[10px] text-gray-400 mt-1">{{ c.hora }} · {{ c.cat }}</p>
+              </div>
+
+              <div class="flex items-center justify-between pt-1">
+                <div class="flex items-center gap-2">
                   <span
                     class="text-[10px] font-bold px-2 py-0.5 rounded uppercase"
                     [ngClass]="
@@ -145,59 +255,22 @@ import { WebsocketService } from '../../../../websocket.service';
                   >
                     {{ c.sector }}
                   </span>
-                </div>
-
-                <div class="flex items-center gap-2 min-w-0">
-                  <span
-                    class="w-6 h-6 rounded-full bg-green-50 text-green-800 text-[10px] font-bold flex items-center justify-center shrink-0"
-                  >
-                    {{ c.vendedor === 'Sin asignar' ? '—' : iniciais(c.vendedor) }}
+                  <span class="text-xs text-gray-600 truncate">
+                    👤 {{ c.vendedor }}
                   </span>
-                  <span class="text-xs text-gray-700 truncate">{{ c.vendedor }}</span>
                 </div>
 
-                <div class="min-w-0">
-                  <p class="text-xs text-gray-700 truncate">{{ c.msg }}</p>
-                  <p class="text-[11px] text-gray-400">{{ c.hora }} · {{ c.cat }}</p>
-                </div>
-
-                <div>
-                  @if (c.status === 'FECHADO') {
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-500">
-                      cerrada
-                    </span>
-                  } @else if (c.status === 'RESPONDIDO') {
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-green-50 text-green-700">
-                      ✓ respondido
-                    </span>
-                  } @else if (c.status === 'ATRASADO' || c.esperaMin >= limiteSla) {
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-600">
-                      {{ c.esperaMin }} min
-                    </span>
-                  } @else if (c.esperaMin >= metadeSla) {
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 text-amber-700">
-                      {{ c.esperaMin }} min
-                    </span>
-                  } @else {
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-600">
-                      {{ c.esperaMin }} min
-                    </span>
-                  }
-                </div>
-
-                <div class="text-right">
-                  <button
-                    (click)="abrirNoChat(c)"
-                    class="px-3 py-1.5 text-xs font-semibold text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-100"
-                  >
-                    Abrir
-                  </button>
-                </div>
+                <button
+                  (click)="abrirNoChat(c)"
+                  class="px-4 py-2 bg-[#0a3a2a] text-white text-xs font-bold rounded-xl shadow-2xs"
+                >
+                  Abrir chat →
+                </button>
               </div>
-            }
-          </div>
-        }
-      </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   `,
 })
@@ -303,6 +376,7 @@ export class AdminConversacionesComponent implements OnInit, OnDestroy {
       telefoneCliente: c.tel,
       status: c.status,
       ultimaInteracao: new Date().toISOString(),
+      esperaMin: c.esperaMin,
       setor: c.sector,
       categoria: c.cat,
     });

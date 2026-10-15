@@ -1,4 +1,4 @@
-<div class="h-full flex w-full bg-[#f8f9fa] relative overflow-hidden">
+<div class="h-full flex w-full bg-[#f4f6f8] relative overflow-hidden">
   <!-- Input oculto para upload de fotos, vídeos, áudios e PDFs -->
   <input #inputArquivo type="file" class="hidden" (change)="aoSelecionarArquivo($event)" />
 
@@ -6,60 +6,60 @@
   <div class="flex-1 flex flex-col h-full min-w-0">
     <!-- Header do Chat (Topo) -->
     <div
-      class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200 shadow-sm shrink-0"
+      class="bg-white px-3 sm:px-5 py-3 flex items-center justify-between border-b border-gray-200/90 shadow-2xs shrink-0 gap-2"
     >
-      <div class="flex items-center gap-3 min-w-0">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <div
-          class="w-10 h-10 rounded-full bg-green-50 text-green-800 border border-green-200 flex items-center justify-center font-bold text-xs shrink-0"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a3a2a] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"
         >
           {{ iniciais(selecionado?.nomeCliente) }}
         </div>
         <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h3 class="text-sm font-bold text-gray-900 truncate">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <h3 class="text-xs sm:text-sm font-extrabold text-gray-900 truncate">
               {{ selecionado?.nomeCliente || 'Seleccioná una atención' }}
             </h3>
             @if (selecionado) {
               <span
-                class="px-2 py-0.5 text-[10px] font-bold rounded bg-green-50 text-green-800 uppercase shrink-0"
+                class="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-md bg-green-50 text-green-800 border border-green-200/60 uppercase shrink-0"
               >
-                {{ ficha?.tipoCliente || 'MINORISTA' }}
+                {{ ficha?.tipoCliente || selecionado.setor || 'MINORISTA' }}
               </span>
             }
           </div>
           @if (selecionado) {
-            <p class="text-xs text-gray-500 mt-0.5 truncate">
-              {{ selecionado.telefoneCliente }} · en línea hace 1 min
+            <p class="text-[11px] text-gray-500 mt-0.5 truncate">
+              {{ selecionado.telefoneCliente }} · WhatsApp Oficial
             </p>
           }
         </div>
       </div>
 
-      <!-- Botões de Ação Direita (Idênticos às Fotos 1 e 2) -->
+      <!-- Botões de Ação Direita (Visíveis no Telemóvel e Desktop) -->
       @if (selecionado) {
-        <div class="flex items-center gap-2 shrink-0">
-        @if (selecionado.status === 'FECHADO') {
-            <div class="px-2.5 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs text-gray-600 font-semibold">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          @if (selecionado.status === 'FECHADO') {
+            <div class="px-2 sm:px-2.5 py-1 bg-gray-100 border border-gray-200 rounded-lg text-[11px] text-gray-600 font-semibold">
               Cerrada
             </div>
           } @else if (selecionado.status === 'RESPONDIDO') {
-            <div class="px-2.5 py-1 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 font-bold hidden sm:block">
-              ✓ Respondido
+            <div class="px-2 sm:px-2.5 py-1 bg-green-50 border border-green-200 rounded-lg text-[11px] text-green-700 font-bold">
+              ✓ <span class="hidden sm:inline">Respondido</span>
             </div>
           } @else {
             <div
-              class="px-2.5 py-1 border rounded-lg text-xs font-semibold hidden sm:block"
+              class="px-2 sm:px-2.5 py-1 border rounded-lg text-[11px] font-bold"
               [ngClass]="
                 minutosEsperaAtual >= slaMinutos
-                  ? 'bg-red-50 border-red-200 text-red-700'
+                  ? 'bg-red-50 border-red-200 text-red-700 animate-pulse'
                   : 'bg-gray-50 border-gray-200 text-gray-700'
               "
             >
-              {{ minutosEsperaAtual }}/{{ slaMinutos }}m
+              ⏱ {{ minutosEsperaAtual }}/{{ slaMinutos }}m
             </div>
           }
 
-          <!-- Botão Simular / Alternar Janela 24h (Útil para demonstrar a Foto 2 ao cliente) -->
+          <!-- Botão Simular / Alternar Janela 24h -->
           <button
             (click)="forcarJanela24hFechada = !forcarJanela24hFechada"
             title="Alternar vista de Ventana 24h (Plantillas Meta)"
@@ -73,12 +73,12 @@
             24h
           </button>
 
-          <!-- Botão Transferir (Controlado pela permissão do Admin) -->
+          <!-- Botão Transferir -->
           @if (podeTransferir) {
             <button
               (click)="abrirTransferencia()"
               title="Transferir atención"
-              class="p-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
+              class="p-1.5 sm:p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -96,13 +96,13 @@
             <button
               (click)="iniciarFechamentoAtendimento()"
               [disabled]="fechando"
-              class="px-3.5 py-1.5 bg-green-700 text-white rounded-lg text-xs font-bold hover:bg-green-800 transition-colors shadow-sm disabled:opacity-50"
+              class="px-2.5 sm:px-3.5 py-1.5 bg-green-700 text-white rounded-xl text-xs font-bold hover:bg-green-800 transition-colors shadow-2xs disabled:opacity-50"
             >
-              {{ fechando ? 'Cerrando...' : 'Cerrar' }}
+              {{ fechando ? '...' : 'Cerrar' }}
             </button>
           }
 
-          <!-- Botão Ficha do Cliente (Ícone Split-Panel) -->
+          <!-- Botão Ficha do Cliente -->
           <button
             (click)="toggleFichaCliente()"
             title="Ficha del cliente"
@@ -111,7 +111,7 @@
                 ? 'border-green-700 bg-green-50 text-green-700'
                 : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
             "
-            class="p-1.5 border rounded-lg transition-colors"
+            class="p-1.5 sm:p-2 border rounded-xl transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="2"></rect>
@@ -122,20 +122,20 @@
       }
     </div>
 
-    <!-- Alerta de Sistema WebSocket (Foto 1) -->
+    <!-- Alerta de Sistema WebSocket -->
     @if (selecionado && alertaWsVisivel) {
       <div
         class="bg-green-50 border-b border-green-100 px-4 py-2 flex justify-between items-center shrink-0"
       >
         <div class="flex items-center gap-2 text-xs font-semibold text-green-800">
           <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          Nuevo mensaje recibido por WebSocket
+          Nuevo mensaje en vivo recibido
         </div>
         <button
           (click)="alertaWsVisivel = false"
           class="text-xs font-bold text-green-700 hover:underline"
         >
-          Marcar como leído
+          OK
         </button>
       </div>
     }
@@ -144,28 +144,15 @@
     <div
       #areaMensagens
       (scroll)="aoRolarChat($event)"
-      class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3.5"
+      class="flex-1 overflow-y-auto p-3.5 sm:p-6 flex flex-col gap-3.5"
     >
-      <!-- Estado vazio -->
       @if (!selecionado) {
         <div class="flex-1 flex flex-col items-center justify-center text-center gap-3">
-          <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-            <svg
-              class="w-8 h-8 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 21l1.8-4A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
+          <div class="w-16 h-16 rounded-2xl bg-white shadow-xs border border-gray-100 flex items-center justify-center text-2xl">
+            🌾
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-500">Ninguna conversación seleccionada</p>
+            <p class="text-sm font-bold text-gray-700">Ninguna conversación seleccionada</p>
             <p class="text-xs text-gray-400 mt-0.5">
               Elegí una atención en la lista de la izquierda para comenzar.
             </p>
@@ -173,28 +160,26 @@
         </div>
       }
 
-      <!-- Pílula Central de Atribuição / Fechamento (Fotos 1 e 2) -->
       @if (selecionado && !carregandoHistorico) {
         <div class="flex justify-center mb-1">
           @if (selecionado.status === 'FECHADO') {
             <span
-              class="bg-white border border-gray-200 text-gray-500 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-sm flex items-center gap-1.5"
+              class="bg-white border border-gray-200 text-gray-500 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-2xs flex items-center gap-1.5"
             >
               <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
               Atención cerrada · motivo: {{ motivoFechamentoSelecionado }}
             </span>
           } @else {
             <span
-              class="bg-white border border-gray-200 text-gray-500 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-sm flex items-center gap-1.5"
+              class="bg-white border border-gray-200 text-gray-500 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-2xs flex items-center gap-1.5"
             >
-              <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-              Asignado por distribución · Sticky Session con {{ usuarioNome }}
+              <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+              Asignado por distribución Sticky Session con {{ usuarioNome }}
             </span>
           }
         </div>
       }
 
-      <!-- SKELETON LOADER -->
       @if (carregandoHistorico) {
         <div class="flex flex-col gap-4 flex-1 py-2">
           <div class="flex justify-start">
@@ -203,51 +188,42 @@
           <div class="flex justify-end">
             <div class="bg-green-100 animate-pulse h-16 w-72 rounded-2xl rounded-tr-none"></div>
           </div>
-          <div class="flex justify-start">
-            <div class="bg-gray-200 animate-pulse h-10 w-48 rounded-2xl rounded-tl-none"></div>
-          </div>
         </div>
       }
 
-      <!-- Lista de Mensagens REAIS (Com suporte a Texto, Áudio, Foto, Vídeo e PDF) -->
       @if (!carregandoHistorico) {
         @for (msg of mensagens; track $index) {
-          <!-- 1. AUDITORIA / SISTEMA -->
           @if (msg.remetenteTipo === 'SISTEMA' || msg.tipoMensagem === 'AUDITORIA') {
             <div class="flex justify-center my-1">
               <div
-                class="bg-white border border-gray-200 text-gray-600 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-sm flex items-center gap-2"
+                class="bg-white border border-gray-200/90 text-gray-600 text-[11px] font-medium px-3.5 py-1 rounded-full shadow-2xs flex items-center gap-2 text-center"
               >
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full shrink-0"></span>
                 <span>{{ msg.conteudo }}</span>
-                <span class="text-[10px] text-gray-400">{{ msg.hora }}</span>
+                <span class="text-[10px] text-gray-400 shrink-0">{{ msg.hora }}</span>
               </div>
             </div>
           }
 
-          <!-- 2. RECEBIDA (CLIENTE) -->
           @if (msg.remetenteTipo === 'CLIENTE') {
-            <div class="flex flex-col self-start max-w-[85%] md:max-w-[65%]">
+            <div class="flex flex-col self-start max-w-[88%] md:max-w-[65%]">
               <div
-                class="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm border border-gray-200/80 text-sm text-gray-800"
+                class="bg-white p-3.5 rounded-2xl rounded-tl-xs shadow-2xs border border-gray-200/80 text-sm text-gray-800"
               >
-                <!-- Mídia: Imagem -->
                 @if (msg.tipoMensagem === 'IMAGEM' && msg.mediaUrl) {
                   <img
                     [src]="msg.mediaUrl"
                     alt="Imagen"
-                    class="rounded-lg max-h-64 w-auto object-cover mb-2 border border-gray-100"
+                    class="rounded-xl max-h-64 w-auto object-cover mb-2 border border-gray-100"
                   />
                 }
-                <!-- Mídia: Vídeo -->
                 @if (msg.tipoMensagem === 'VIDEO' && msg.mediaUrl) {
                   <video
                     [src]="msg.mediaUrl"
                     controls
-                    class="rounded-lg max-h-64 w-full mb-2 bg-black"
+                    class="rounded-xl max-h-64 w-full mb-2 bg-black"
                   ></video>
                 }
-                <!-- Mídia: Áudio -->
                 @if (msg.tipoMensagem === 'AUDIO') {
                   @if (
                     msg.mediaUrl &&
@@ -256,20 +232,19 @@
                     <audio [src]="msg.mediaUrl" controls class="w-60 sm:w-72 h-10 mb-1"></audio>
                   } @else {
                     <div
-                      class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-1"
+                      class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 mb-1"
                     >
                       <span class="text-lg">🎵</span>
                       <span class="text-xs font-medium text-gray-700">Nota de voz de WhatsApp</span>
                     </div>
                   }
                 }
-                <!-- Mídia: Documento / PDF -->
                 @if (msg.tipoMensagem === 'DOCUMENTO') {
                   <a
                     [href]="msg.mediaUrl || '#'"
                     [download]="msg.nomeArquivo || 'documento.pdf'"
                     target="_blank"
-                    class="flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 p-2.5 rounded-lg border border-gray-200 mb-2 transition-colors"
+                    class="flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 p-2.5 rounded-xl border border-gray-200 mb-2 transition-colors"
                   >
                     <span class="text-xl">📄</span>
                     <div class="min-w-0 flex-1">
@@ -280,50 +255,44 @@
                     </div>
                   </a>
                 }
-
                 <p class="whitespace-pre-line leading-relaxed">{{ msg.conteudo }}</p>
                 <div class="text-[10px] text-gray-400 text-right mt-1">{{ msg.hora }}</div>
               </div>
             </div>
           }
 
-          <!-- 3. ENVIADA (VENDEDOR / BOT) -->
           @if (
             msg.remetenteTipo !== 'CLIENTE' &&
             msg.remetenteTipo !== 'SISTEMA' &&
             msg.tipoMensagem !== 'AUDITORIA'
           ) {
-            <div class="flex flex-col self-end max-w-[85%] md:max-w-[65%]">
+            <div class="flex flex-col self-end max-w-[88%] md:max-w-[65%]">
               <div
-                class="bg-[#e8f5e9] p-3.5 rounded-xl rounded-tr-sm shadow-sm border border-[#c8e6c9] text-sm text-gray-800"
+                class="bg-[#e8f5e9] p-3.5 rounded-2xl rounded-tr-xs shadow-2xs border border-[#c8e6c9] text-sm text-gray-800"
               >
-                <!-- Mídia: Imagem -->
                 @if (msg.tipoMensagem === 'IMAGEM' && msg.mediaUrl) {
                   <img
                     [src]="msg.mediaUrl"
                     alt="Imagen enviada"
-                    class="rounded-lg max-h-64 w-auto object-cover mb-2 border border-green-200"
+                    class="rounded-xl max-h-64 w-auto object-cover mb-2 border border-green-200"
                   />
                 }
-                <!-- Mídia: Vídeo -->
                 @if (msg.tipoMensagem === 'VIDEO' && msg.mediaUrl) {
                   <video
                     [src]="msg.mediaUrl"
                     controls
-                    class="rounded-lg max-h-64 w-full mb-2 bg-black"
+                    class="rounded-xl max-h-64 w-full mb-2 bg-black"
                   ></video>
                 }
-                <!-- Mídia: Áudio -->
                 @if (msg.tipoMensagem === 'AUDIO' && msg.mediaUrl) {
                   <audio [src]="msg.mediaUrl" controls class="w-60 sm:w-72 h-10 mb-1"></audio>
                 }
-                <!-- Mídia: Documento / PDF -->
                 @if (msg.tipoMensagem === 'DOCUMENTO') {
                   <a
                     [href]="msg.mediaUrl || '#'"
                     [download]="msg.nomeArquivo || 'documento.pdf'"
                     target="_blank"
-                    class="flex items-center gap-2.5 bg-white/80 hover:bg-white p-2.5 rounded-lg border border-green-200 mb-2 transition-colors"
+                    class="flex items-center gap-2.5 bg-white/80 hover:bg-white p-2.5 rounded-xl border border-green-200 mb-2 transition-colors"
                   >
                     <span class="text-xl">📄</span>
                     <div class="min-w-0 flex-1">
@@ -334,7 +303,6 @@
                     </div>
                   </a>
                 }
-
                 <p class="whitespace-pre-line leading-relaxed">{{ msg.conteudo }}</p>
                 <div class="flex justify-end items-center gap-1 mt-1">
                   <span class="text-[10px] text-gray-500">{{ msg.hora }}</span>
@@ -347,10 +315,10 @@
       }
     </div>
 
-    <!-- RODAPÉ 1: JANELA DE 24H FECHADA (SELETOR DE PLANTILLAS - FOTO 2 E FOTO 4) -->
+    <!-- RODAPÉ 1: JANELA DE 24H FECHADA -->
     @if (selecionado && janela24hFechada) {
-      <div class="bg-white border-t border-gray-200 p-4 shrink-0">
-        <div class="border border-amber-200 bg-amber-50/40 rounded-xl p-4">
+      <div class="bg-white border-t border-gray-200 p-3.5 sm:p-4 shrink-0">
+        <div class="border border-amber-200 bg-amber-50/40 rounded-2xl p-4">
           <div class="flex items-start gap-2.5 mb-3">
             <span
               class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5"
@@ -360,17 +328,16 @@
             <div>
               <h4 class="text-xs font-bold text-gray-900">Ventana de 24 h cerrada</h4>
               <p class="text-xs text-gray-600 mt-0.5">
-                El cliente no escribió en las últimas 24 h. Para retomar el contacto, WhatsApp solo
-                permite enviar una plantilla aprobada por Meta.
+                Para retomar el contacto fuera de las 24 h, seleccioná una plantilla aprobada por Meta (Tarifario 01/10/2026).
               </p>
             </div>
           </div>
 
-          <div class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+          <div class="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
             @for (p of plantillas; track p.id) {
               <label
                 (click)="plantillaSelecionada = p"
-                class="flex items-center justify-between p-2.5 rounded-lg border bg-white cursor-pointer transition-all"
+                class="flex items-center justify-between p-2.5 rounded-xl border bg-white cursor-pointer transition-all"
                 [ngClass]="
                   plantillaSelecionada?.id === p.id
                     ? 'border-green-700 ring-1 ring-green-700 bg-green-50/20'
@@ -385,7 +352,7 @@
                     class="text-green-700 focus:ring-green-600"
                   />
                   <div class="min-w-0">
-                    <p class="text-xs font-bold text-gray-900 font-mono">{{ p.nome }}</p>
+                    <p class="text-xs font-bold text-gray-900 font-mono truncate">{{ p.nome }}</p>
                     <p class="text-[11px] text-gray-500 truncate">{{ p.previa }}</p>
                   </div>
                 </div>
@@ -394,62 +361,58 @@
             }
           </div>
 
-          <div class="flex items-center justify-between mt-3 pt-2 border-t border-amber-200/60">
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-amber-200/60 gap-2">
             <span class="text-[11px] text-gray-500">
-              Elegí una plantilla aprobada para reabrir la conversación.
+              Elegí una plantilla para reabrir
             </span>
             <button
               (click)="enviarPlantillaReabertura()"
               [disabled]="!plantillaSelecionada || enviando"
-              class="px-4 py-2 bg-[#0a3a2a] hover:bg-green-900 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
+              class="px-4 py-2 bg-[#0a3a2a] hover:bg-green-900 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-40"
             >
               Enviar plantilla
             </button>
           </div>
         </div>
-        <div class="pt-2 text-[10px] text-gray-400">
-          Se envía al WhatsApp del cliente desde el número central · +595 61 500 900
-        </div>
       </div>
     }
 
-    <!-- RODAPÉ 2: ÁREA DE INPUT NORMAL COM ANEXOS E GRAVADOR DE ÁUDIO (FOTO 1) -->
+    <!-- RODAPÉ 2: ÁREA DE INPUT NORMAL -->
     @if (selecionado && !janela24hFechada) {
       <div class="bg-white border-t border-gray-200 shrink-0 flex flex-col relative">
-        <!-- Menu Popover de Anexos (Fotos, Vídeos, PDFs, Áudios) -->
         @if (menuAnexoAberto) {
           <div
-            class="absolute bottom-20 left-4 bg-white border border-gray-200 rounded-xl shadow-lg p-2 flex flex-col gap-1 w-52 z-30"
+            class="absolute bottom-20 left-4 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 flex flex-col gap-1 w-52 z-30"
           >
             <button
               (click)="abrirSeletorArquivo('image/*')"
-              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-xl text-left"
             >
               <span>📷</span> Foto o imagen
             </button>
             <button
               (click)="abrirSeletorArquivo('video/*')"
-              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-xl text-left"
             >
               <span>🎬</span> Video (MP4)
             </button>
             <button
               (click)="abrirSeletorArquivo('.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt')"
-              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-xl text-left"
             >
               <span>📄</span> Documento / PDF
             </button>
             <button
               (click)="abrirSeletorArquivo('audio/*')"
-              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg text-left"
+              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-xl text-left"
             >
               <span>🎵</span> Archivo de audio
             </button>
           </div>
         }
 
-        <!-- Chips (Respostas Rápidas) -->
-        <div class="px-4 pt-2.5 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <!-- Chips de Respostas Rápidas -->
+        <div class="px-3 sm:px-4 pt-2.5 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           <button
             (click)="usarRespostaRapida('Confirmo disponibilidad y te paso el presupuesto.')"
             class="whitespace-nowrap px-3 py-1 bg-gray-50 border border-gray-200 rounded-full text-[11px] text-gray-600 font-medium hover:bg-gray-100 transition-colors"
@@ -470,13 +433,11 @@
           </button>
         </div>
 
-        <!-- Barra de Entrada ou Gravador de Áudio -->
-        <div class="p-3 flex items-center gap-2.5">
-          <!-- Botão (+) de Anexos -->
+        <div class="p-2.5 sm:p-3 flex items-center gap-2">
           <button
             (click)="menuAnexoAberto = !menuAnexoAberto"
             title="Adjuntar foto, video, PDF o audio"
-            class="text-gray-500 hover:text-green-700 border border-gray-200 rounded-lg p-2 shrink-0 bg-gray-50 transition-colors"
+            class="text-gray-500 hover:text-green-700 border border-gray-200 rounded-xl p-2.5 shrink-0 bg-gray-50 transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -490,15 +451,13 @@
 
           @if (gravandoAudio) {
             <div
-              class="flex-1 bg-red-50 border border-red-200 rounded-lg px-4 py-2 flex items-center justify-between text-xs text-red-700 font-semibold"
+              class="flex-1 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2 flex items-center justify-between text-xs text-red-700 font-semibold"
             >
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></span>
-                <span
-                  >Grabando nota de voz... {{ formatarTempoGravacao(tempoGravacaoSegundos) }}</span
-                >
+                <span>Grabando... {{ formatarTempoGravacao(tempoGravacaoSegundos) }}</span>
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2.5">
                 <button
                   (click)="cancelarGravacaoAudio()"
                   class="text-gray-500 hover:text-gray-800 font-medium"
@@ -507,9 +466,9 @@
                 </button>
                 <button
                   (click)="alternarGravacaoAudio()"
-                  class="px-3 py-1 bg-green-700 text-white rounded-md font-bold hover:bg-green-800"
+                  class="px-3 py-1 bg-green-700 text-white rounded-lg font-bold hover:bg-green-800"
                 >
-                  Enviar audio
+                  Enviar
                 </button>
               </div>
             </div>
@@ -518,15 +477,14 @@
               type="text"
               [(ngModel)]="mensagemDigitada"
               (keyup.enter)="enviarMensagem()"
-              class="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+              class="flex-1 bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 min-w-0"
               placeholder="Escribí un mensaje..."
             />
 
-            <!-- Botão Microfone (Gravar Nota de Voz) -->
             <button
               (click)="alternarGravacaoAudio()"
               title="Grabar nota de voz"
-              class="p-2 border border-gray-200 rounded-lg text-gray-500 hover:text-green-700 hover:bg-green-50 transition-colors shrink-0"
+              class="p-2.5 border border-gray-200 rounded-xl text-gray-500 hover:text-green-700 hover:bg-green-50 transition-colors shrink-0"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -541,24 +499,26 @@
             <button
               (click)="enviarMensagem()"
               [disabled]="enviando"
-              class="bg-[#0a3a2a] hover:bg-green-900 text-white rounded-lg px-5 py-2 text-sm font-bold transition-colors shadow-sm shrink-0 disabled:opacity-50"
+              class="bg-[#0a3a2a] hover:bg-green-900 text-white rounded-xl px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold transition-colors shadow-2xs shrink-0 disabled:opacity-50"
             >
               Enviar
             </button>
           }
         </div>
-
-        <div class="px-4 pb-2 flex justify-between items-center text-[10px] text-gray-400">
-          <span>Se envía al WhatsApp del cliente desde el número central · +595 61 500 900</span>
-        </div>
       </div>
     }
   </div>
 
-  <!-- COLUNA DIREITA: FICHA DO CLIENTE (FOTO 4 - RESPONSIVA NO CELULAR E DESKTOP) -->
+  <!-- BACKDROP MOBILE PARA A FICHA DO CLIENTE -->
   @if (selecionado && fichaAberta) {
+    <div
+      (click)="fichaAberta = false"
+      class="fixed inset-0 bg-black/40 backdrop-blur-xs z-20 md:hidden"
+    ></div>
+
+    <!-- COLUNA DIREITA: FICHA DO CLIENTE -->
     <aside
-      class="fixed inset-y-0 right-0 md:relative w-80 bg-white border-l border-gray-200 h-full overflow-y-auto shrink-0 flex flex-col z-30 shadow-xl md:shadow-none"
+      class="fixed inset-y-0 right-0 md:relative w-80 max-w-[88vw] bg-white border-l border-gray-200 h-full overflow-y-auto shrink-0 flex flex-col z-30 shadow-2xl md:shadow-none"
     >
       @if (carregandoFicha || !ficha) {
         <div class="p-8 text-center text-sm text-gray-400">Cargando ficha del cliente...</div>
@@ -566,20 +526,20 @@
         <div class="p-6 flex flex-col items-center border-b border-gray-100 relative">
           <button
             (click)="fichaAberta = false"
-            class="md:hidden absolute top-4 left-4 text-xs text-gray-500 hover:text-gray-800"
+            class="md:hidden absolute top-4 left-4 text-xs font-bold text-gray-500 hover:text-gray-800 px-2 py-1 rounded-lg bg-gray-100"
           >
             ✕ Cerrar
           </button>
 
           <button
             (click)="editandoFicha = !editandoFicha"
-            class="absolute top-4 right-4 text-xs font-medium text-green-700 hover:underline"
+            class="absolute top-4 right-4 text-xs font-bold text-green-700 hover:underline"
           >
             {{ editandoFicha ? 'Cancelar' : 'Editar' }}
           </button>
 
           <div
-            class="w-14 h-14 rounded-full bg-green-50 text-green-800 flex items-center justify-center font-bold text-lg mb-3"
+            class="w-14 h-14 rounded-full bg-green-50 text-green-800 flex items-center justify-center font-bold text-lg mb-3 mt-2"
           >
             {{ iniciais(ficha.nome) }}
           </div>
@@ -590,7 +550,7 @@
             <input
               type="text"
               [(ngModel)]="ficha.nome"
-              class="border border-gray-300 rounded px-2 py-1 text-sm text-center font-bold text-gray-900 w-full mb-1"
+              class="border border-gray-300 rounded-lg px-2 py-1 text-sm text-center font-bold text-gray-900 w-full mb-1"
               placeholder="Nombre del cliente"
             />
           }
@@ -600,29 +560,27 @@
           <div class="flex items-center gap-2 mt-3">
             @if (!editandoFicha) {
               <span
-                class="px-2.5 py-0.5 bg-green-50 text-green-800 text-[11px] font-semibold rounded"
+                class="px-2.5 py-0.5 bg-green-50 text-green-800 text-[11px] font-semibold rounded-md"
               >
                 {{ ficha.tipoCliente }}
               </span>
             } @else {
               <select
                 [(ngModel)]="ficha.tipoCliente"
-                class="border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-800"
+                class="border border-gray-300 rounded-lg px-2 py-0.5 text-xs text-gray-800"
               >
                 <option value="Minorista">Minorista</option>
                 <option value="Mayorista">Mayorista</option>
               </select>
             }
-            <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">
-              Cliente desde {{ anoCliente(ficha.clienteDesde) }}
+            <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-md">
+              Desde {{ anoCliente(ficha.clienteDesde) }}
             </span>
           </div>
         </div>
 
-        <!-- Seção 1: DATOS -->
         <div class="p-5 border-b border-gray-100">
           <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">Datos</p>
-
           <div class="flex flex-col gap-2.5 text-xs">
             <div class="flex justify-between items-center gap-2">
               <span class="text-gray-500">Establecimiento</span>
@@ -632,12 +590,10 @@
                 <input
                   type="text"
                   [(ngModel)]="ficha.estabelecimento"
-                  placeholder="Ej: Chacra Los Cedrales"
-                  class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
+                  class="border border-gray-300 rounded-lg px-2 py-1 text-xs text-right w-40"
                 />
               }
             </div>
-
             <div class="flex justify-between items-center gap-2">
               <span class="text-gray-500">Ciudad</span>
               @if (!editandoFicha) {
@@ -646,12 +602,10 @@
                 <input
                   type="text"
                   [(ngModel)]="ficha.cidade"
-                  placeholder="Ej: Los Cedrales"
-                  class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
+                  class="border border-gray-300 rounded-lg px-2 py-1 text-xs text-right w-40"
                 />
               }
             </div>
-
             <div class="flex justify-between items-center gap-2">
               <span class="text-gray-500">Cultivo</span>
               @if (!editandoFicha) {
@@ -660,22 +614,19 @@
                 <input
                   type="text"
                   [(ngModel)]="ficha.cultivo"
-                  placeholder="Ej: Soja · 90 ha"
-                  class="border border-gray-300 rounded px-2 py-1 text-xs text-right w-40"
+                  class="border border-gray-300 rounded-lg px-2 py-1 text-xs text-right w-40"
                 />
               }
             </div>
           </div>
         </div>
 
-        <!-- Seção 2: INTERÉS ACTUAL -->
         <div class="p-5 border-b border-gray-100">
           <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">
             Interés actual
           </p>
-
           @if (!editandoFicha) {
-            <div class="bg-gray-50 border border-gray-100 rounded-lg p-3">
+            <div class="bg-gray-50 border border-gray-100 rounded-xl p-3">
               <p class="text-xs font-bold text-gray-900">{{ ficha.interesseTitulo }}</p>
               <p class="text-[11px] text-gray-500 mt-0.5">{{ ficha.interesseDetalhe }}</p>
             </div>
@@ -684,19 +635,17 @@
               <input
                 type="text"
                 [(ngModel)]="ficha.interesseTitulo"
-                placeholder="Título (ej: Implementos)"
-                class="border border-gray-300 rounded px-2.5 py-1.5 text-xs w-full"
+                class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs w-full"
               />
               <input
                 type="text"
                 [(ngModel)]="ficha.interesseDetalhe"
-                placeholder="Detalle (ej: Compra cerrada en el día)"
-                class="border border-gray-300 rounded px-2.5 py-1.5 text-xs w-full"
+                class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs w-full"
               />
               <button
                 (click)="salvarFichaCliente()"
                 [disabled]="salvandoFicha"
-                class="mt-1 w-full bg-green-700 hover:bg-green-800 text-white font-bold text-xs py-2 rounded-lg transition-colors"
+                class="mt-1 w-full bg-green-700 hover:bg-green-800 text-white font-bold text-xs py-2 rounded-xl transition-colors"
               >
                 {{ salvandoFicha ? 'Guardando...' : 'Guardar ficha' }}
               </button>
@@ -704,10 +653,8 @@
           }
         </div>
 
-        <!-- Seção 3: HISTORIAL -->
         <div class="p-5">
           <p class="text-[11px] font-bold tracking-wider text-gray-400 uppercase mb-3">Historial</p>
-
           <div class="flex flex-col gap-3">
             @for (h of ficha.historial; track h.atendimentoId) {
               <div class="flex items-start gap-2.5">
@@ -726,17 +673,15 @@
     </aside>
   }
 
-  <!-- MODAL 1: TRANSFERIR ATENCIÓN (IDÊNTICO À FOTO 3) -->
+  <!-- MODAL 1: TRANSFERIR ATENCIÓN -->
   @if (modalAberto) {
-    <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[92vh]">
-        <!-- Cabeçalho -->
         <div class="px-6 py-4 flex items-start justify-between">
           <div>
             <h3 class="text-base font-bold text-gray-900">Transferir atención</h3>
             <p class="text-xs text-gray-500 mt-0.5">
-              {{ selecionado?.nomeCliente }} · {{ selecionado?.telefoneCliente }} ·
-              {{ selecionado?.status === 'FECHADO' ? 'Atención cerrada' : 'Atención activa' }}
+              {{ selecionado?.nomeCliente }} · {{ selecionado?.telefoneCliente }}
             </p>
           </div>
           <button
@@ -748,11 +693,8 @@
         </div>
 
         <div class="px-6 pb-4 flex flex-col gap-4 overflow-y-auto">
-          <!-- MOTIVO (Chips) -->
           <div>
-            <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase"
-              >Motivo</label
-            >
+            <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase">Motivo</label>
             <div class="flex flex-wrap gap-2 mt-2">
               @for (chip of motivosTransferenciaChips; track chip) {
                 <button
@@ -763,7 +705,7 @@
                       ? 'border-green-700 bg-green-50/60 text-green-800 font-bold'
                       : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 font-medium'
                   "
-                  class="px-3 py-1.5 rounded-lg border text-xs transition-all"
+                  class="px-3 py-1.5 rounded-xl border text-xs transition-all"
                 >
                   {{ chip }}
                 </button>
@@ -771,12 +713,9 @@
             </div>
           </div>
 
-          <!-- DESTINO (Ordenado por menor carga) -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase"
-                >Destino</label
-              >
+              <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase">Destino</label>
               <span class="text-[11px] text-gray-400">Ordenado por menor carga</span>
             </div>
 
@@ -819,7 +758,6 @@
                         </div>
                         <p class="text-[11px] text-gray-500">
                           {{ nomeSetorEspanhol(v.setor) }} · {{ v.quantidadeAtendimentos }} activas
-                          · responde en 2m
                         </p>
                       </div>
                     </div>
@@ -843,11 +781,8 @@
             </div>
           </div>
 
-          <!-- NOTA INTERNA -->
           <div>
-            <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase"
-              >Nota interna</label
-            >
+            <label class="text-[11px] font-bold tracking-wider text-gray-400 uppercase">Nota interna</label>
             <input
               type="text"
               [(ngModel)]="notaInterna"
@@ -857,12 +792,9 @@
           </div>
         </div>
 
-        <!-- Rodapé Modal -->
         <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
           <span class="text-xs text-gray-400">
-            {{
-              destinoSelecionadoId ? 'Vendedor seleccionado' : 'Elegí un destino para continuar.'
-            }}
+            {{ destinoSelecionadoId ? 'Vendedor seleccionado' : 'Elegí un destino' }}
           </span>
           <div class="flex items-center gap-2">
             <button
@@ -874,7 +806,7 @@
             <button
               (click)="confirmarTransferencia()"
               [disabled]="!destinoSelecionadoId || transferindo"
-              class="px-5 py-2 text-xs font-bold text-white bg-[#0a3a2a] rounded-xl hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="px-5 py-2 text-xs font-bold text-white bg-[#0a3a2a] rounded-xl hover:bg-green-900 disabled:opacity-40"
             >
               {{ transferindo ? 'Transfiriendo...' : 'Transferir' }}
             </button>
@@ -884,9 +816,9 @@
     </div>
   }
 
-  <!-- MODAL 2: TABULAÇÃO AO FECHAR ATENDIMENTO (TAGS Y CIERRES) -->
+  <!-- MODAL 2: TABULAÇÃO AO FECHAR ATENDIMENTO -->
   @if (modalFecharAberto) {
-    <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <h3 class="text-base font-bold text-gray-900">Cerrar atención</h3>
         <p class="text-xs text-gray-500 mt-1">
@@ -903,7 +835,7 @@
                   ? 'border-green-700 bg-green-50 text-green-800 font-bold'
                   : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
               "
-              class="px-3 py-1.5 rounded-lg border text-xs transition-all"
+              class="px-3 py-1.5 rounded-xl border text-xs transition-all"
             >
               {{ m }}
             </button>

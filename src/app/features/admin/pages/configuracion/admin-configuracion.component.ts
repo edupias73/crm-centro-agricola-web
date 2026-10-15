@@ -12,7 +12,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
   template: `
     <div class="flex flex-1 min-h-full w-full">
       <!-- SUBMENU SECUNDÁRIO BRANCO (Desktop) -->
-      <div class="hidden lg:flex w-60 bg-white border-r border-gray-200 flex-col shrink-0 p-4">
+      <div class="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col shrink-0 p-4">
         <p class="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
           Panel del gestor
         </p>
@@ -24,10 +24,10 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               (click)="selecionarAba(sub.id)"
               [ngClass]="
                 abaAtiva === sub.id
-                  ? 'bg-green-50 text-green-900 font-bold'
+                  ? 'bg-[#0a3a2a] text-white font-bold shadow-2xs'
                   : 'text-gray-600 hover:bg-gray-50 font-medium'
               "
-              class="text-left px-3 py-2 rounded-lg text-xs transition-colors"
+              class="text-left px-3.5 py-2.5 rounded-xl text-xs transition-all"
             >
               {{ sub.label }}
             </button>
@@ -37,7 +37,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
 
       <!-- CONTEÚDO DA SUB-ABA SELECIONADA -->
       <div class="flex-1 p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
-        <!-- Barra Horizontal Mobile -->
+        <!-- Barra Horizontal Mobile/Tablet -->
         <div
           class="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-4 border-b border-gray-200 no-scrollbar"
         >
@@ -46,10 +46,10 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               (click)="selecionarAba(sub.id)"
               [ngClass]="
                 abaAtiva === sub.id
-                  ? 'bg-[#0a3a2a] text-white font-bold'
+                  ? 'bg-[#0a3a2a] text-white font-bold shadow-2xs'
                   : 'bg-white text-gray-600 border border-gray-200'
               "
-              class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap shrink-0"
+              class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap shrink-0 transition-all"
             >
               {{ sub.label }}
             </button>
@@ -58,55 +58,51 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
 
         @if (mensagemSucesso) {
           <div
-            class="mb-4 p-3.5 bg-green-50 border border-green-200 text-green-800 text-xs font-bold rounded-xl"
+            class="mb-4 p-3.5 bg-green-50 border border-green-200 text-green-800 text-xs font-bold rounded-xl shadow-2xs"
           >
             ✅ {{ mensagemSucesso }}
           </div>
         }
 
-        <!-- 1. USUARIOS Y VENDEDORES (100% REAL NO MYSQL) -->
+        <!-- 1. USUARIOS Y VENDEDORES -->
         @if (abaAtiva === 'usuarios') {
           <div class="flex items-start justify-between flex-wrap gap-4">
             <div>
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Equipo</p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Usuarios y vendedores</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Usuarios y vendedores</h1>
             </div>
-            <div class="flex gap-2">
-              <button
-                (click)="abrirModalNovoUsuario()"
-                class="px-4 py-2 bg-[#0a3a2a] hover:bg-green-900 text-white rounded-lg text-xs font-bold shadow-sm"
-              >
-                + Nuevo usuario
-              </button>
-            </div>
+            <button
+              (click)="abrirModalNovoUsuario()"
+              class="px-4 py-2.5 bg-[#0a3a2a] hover:bg-green-900 text-white rounded-xl text-xs font-bold shadow-xs"
+            >
+              + Nuevo usuario
+            </button>
           </div>
 
-          <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-            <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm">
+          <div class="grid grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4 mt-6">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs">
               <span class="text-xs text-gray-500">Usuarios activos</span>
-              <p class="text-2xl font-bold text-gray-900 mt-1">
+              <p class="text-2xl font-extrabold text-gray-900 mt-1">
                 {{ totalAtivos }} / {{ usuarios.length }}
               </p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs">
               <span class="text-xs text-gray-500">En línea ahora</span>
-              <p class="text-2xl font-bold text-green-700 mt-1">{{ totalOnline }}</p>
+              <p class="text-2xl font-extrabold text-green-700 mt-1">{{ totalOnline }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs">
               <span class="text-xs text-gray-500">Mayorista / Minorista</span>
-              <p class="text-2xl font-bold text-gray-900 mt-1">
+              <p class="text-2xl font-extrabold text-gray-900 mt-1">
                 {{ totalMayoristas }} / {{ totalMinoristas }}
               </p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs">
               <span class="text-xs text-gray-500">Atenciones abiertas</span>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ totalConversasAbertas }}</p>
+              <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ totalConversasAbertas }}</p>
             </div>
           </div>
 
-          <div
-            class="bg-white rounded-xl border border-gray-200/80 p-5 mt-5 shadow-sm overflow-x-auto"
-          >
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 mt-5 shadow-xs">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <h2 class="text-sm font-bold text-gray-900">Usuarios registrados en MySQL</h2>
@@ -114,22 +110,17 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   Estado de conexión, sector y activación de cuenta
                 </p>
               </div>
-              <button
-                (click)="abrirModalNovoUsuario()"
-                class="px-3.5 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg hover:bg-gray-800"
-              >
-                Nuevo usuario
-              </button>
             </div>
 
-            <div class="min-w-[640px]">
+            <!-- Desktop Table -->
+            <div class="hidden md:block">
               <div
                 class="grid grid-cols-[1.8fr_0.8fr_0.8fr_1fr_0.9fr_60px] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-2 pb-2.5 border-b border-gray-100"
               >
                 <span>Usuario</span>
                 <span>Perfil</span>
                 <span>Sector</span>
-                <span>Carga</span>
+                <span>Horario</span>
                 <span>Estado</span>
                 <span class="text-right">Activo</span>
               </div>
@@ -140,7 +131,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                 >
                   <div class="flex items-center gap-3 min-w-0">
                     <div
-                      class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs shrink-0"
+                      class="w-8 h-8 rounded-full bg-green-50 text-green-800 flex items-center justify-center font-bold text-xs shrink-0"
                     >
                       {{ iniciais(u.nome) }}
                     </div>
@@ -165,7 +156,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   <span class="text-xs font-mono text-gray-600">{{ u.cargaHoraria }}</span>
                   <span
                     class="text-xs flex items-center gap-1.5"
-                    [ngClass]="u.estado === 'En línea' ? 'text-green-600' : 'text-gray-400'"
+                    [ngClass]="u.estado === 'En línea' ? 'text-green-600 font-semibold' : 'text-gray-400'"
                   >
                     <span
                       class="w-1.5 h-1.5 rounded-full"
@@ -189,6 +180,64 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                 </div>
               }
             </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden flex flex-col gap-3">
+              @for (u of usuarios; track u.id) {
+                <div class="p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/40 flex flex-col gap-2.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div
+                        class="w-9 h-9 rounded-full bg-[#0a3a2a] text-white flex items-center justify-center font-bold text-xs shrink-0"
+                      >
+                        {{ iniciais(u.nome) }}
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-gray-900 truncate">{{ u.nome }}</p>
+                        <p class="text-[11px] text-gray-400 truncate">{{ u.email }}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="alternarAtivoUsuario(u)"
+                      class="w-10 h-5 rounded-full transition-colors p-0.5 shrink-0"
+                      [ngClass]="u.ativo ? 'bg-green-700' : 'bg-gray-300'"
+                    >
+                      <div
+                        class="w-4 h-4 rounded-full bg-white shadow transform transition-transform"
+                        [class.translate-x-5]="u.ativo"
+                      ></div>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center justify-between text-xs pt-2 border-t border-gray-200/60">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="text-[10px] font-bold px-2 py-0.5 rounded uppercase"
+                        [ngClass]="
+                          u.sector === 'Mayorista'
+                            ? 'bg-amber-50 text-amber-800'
+                            : 'bg-green-50 text-green-800'
+                        "
+                      >
+                        {{ u.sector }}
+                      </span>
+                      <span class="text-gray-500">{{ u.perfil }}</span>
+                    </div>
+                    <span
+                      class="text-xs flex items-center gap-1.5 font-semibold"
+                      [ngClass]="u.estado === 'En línea' ? 'text-green-600' : 'text-gray-400'"
+                    >
+                      <span
+                        class="w-1.5 h-1.5 rounded-full"
+                        [ngClass]="u.estado === 'En línea' ? 'bg-green-500' : 'bg-gray-300'"
+                      ></span>
+                      {{ u.estado }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         }
 
@@ -197,28 +246,28 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           <div class="flex items-start justify-between flex-wrap gap-4">
             <div>
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Accesos</p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Permisos</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Permisos</h1>
               <p class="text-xs text-gray-500 mt-1">Qué puede ver y hacer cada perfil en el CRM.</p>
             </div>
             <div class="flex gap-2">
               <button
                 (click)="descartar()"
-                class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700"
+                class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700"
               >
                 Descartar
               </button>
               <button
                 (click)="guardar()"
-                class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+                class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
               >
                 Guardar cambios
               </button>
             </div>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200/80 mt-6 shadow-sm overflow-hidden">
+          <div class="bg-white rounded-2xl border border-gray-200/80 mt-6 shadow-xs overflow-hidden">
             <div
-              class="grid grid-cols-[1fr_80px_80px] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
+              class="grid grid-cols-[1fr_70px_70px] sm:grid-cols-[1fr_90px_90px] gap-x-3 text-[10px] font-bold text-gray-400 uppercase px-4 sm:px-5 py-3 border-b border-gray-100"
             >
               <span>Permiso</span>
               <span class="text-center">Gerente</span>
@@ -227,7 +276,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
 
             @for (p of permisosLista; track p.chave) {
               <div
-                class="grid grid-cols-[1fr_80px_80px] gap-x-4 items-center px-5 py-4 border-b border-gray-50"
+                class="grid grid-cols-[1fr_70px_70px] sm:grid-cols-[1fr_90px_90px] gap-x-3 items-center px-4 sm:px-5 py-4 border-b border-gray-50"
               >
                 <div>
                   <p class="text-xs font-bold text-gray-900">{{ p.titulo }}</p>
@@ -271,20 +320,20 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">
                 Distribución
               </p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">
                 Distribución de conversaciones
               </h1>
             </div>
             <div class="flex gap-2">
               <button
                 (click)="descartar()"
-                class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700"
+                class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700"
               >
                 Descartar
               </button>
               <button
                 (click)="guardar()"
-                class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+                class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
               >
                 Guardar cambios
               </button>
@@ -294,7 +343,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 mt-6">
             <div class="flex flex-col gap-3">
               <div
-                class="bg-white rounded-xl border border-gray-200/80 p-4 flex items-center justify-between shadow-sm"
+                class="bg-white rounded-2xl border border-gray-200/80 p-4 flex items-center justify-between shadow-xs"
               >
                 <div class="pr-4">
                   <p class="text-xs font-bold text-gray-900">Sticky Session</p>
@@ -316,7 +365,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               </div>
 
               <div
-                class="bg-white rounded-xl border border-gray-200/80 p-4 flex items-center justify-between shadow-sm"
+                class="bg-white rounded-2xl border border-gray-200/80 p-4 flex items-center justify-between shadow-xs"
               >
                 <div class="pr-4">
                   <p class="text-xs font-bold text-gray-900">Transbordo por SLA</p>
@@ -338,7 +387,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               </div>
 
               <div
-                class="bg-white rounded-xl border border-gray-200/80 p-4 flex items-center justify-between shadow-sm"
+                class="bg-white rounded-2xl border border-gray-200/80 p-4 flex items-center justify-between shadow-xs"
               >
                 <div class="pr-4">
                   <p class="text-xs font-bold text-gray-900">Respetar sector del cliente</p>
@@ -360,7 +409,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200/80 p-5 shadow-sm">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs">
               <h2 class="text-sm font-bold text-gray-900 mb-4">Parámetros de distribución</h2>
               <div class="flex flex-col gap-3.5 text-xs">
                 <div>
@@ -369,7 +418,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                     <input
                       type="number"
                       [(ngModel)]="regras.maximoAtendimentosPorVendedor"
-                      class="border border-gray-200 rounded-lg px-3 py-2 w-28 font-bold font-mono"
+                      class="border border-gray-200 rounded-xl px-3 py-2 w-28 font-bold font-mono"
                     />
                     <span class="text-gray-400">atenciones</span>
                   </div>
@@ -380,7 +429,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                     <input
                       type="number"
                       [(ngModel)]="regras.duracaoStickyDias"
-                      class="border border-gray-200 rounded-lg px-3 py-2 w-28 font-bold font-mono"
+                      class="border border-gray-200 rounded-xl px-3 py-2 w-28 font-bold font-mono"
                     />
                     <span class="text-gray-400">días</span>
                   </div>
@@ -391,7 +440,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                     <input
                       type="number"
                       [(ngModel)]="regras.tempoLimiteMinutos"
-                      class="border border-gray-200 rounded-lg px-3 py-2 w-28 font-bold font-mono"
+                      class="border border-gray-200 rounded-xl px-3 py-2 w-28 font-bold font-mono"
                     />
                     <span class="text-gray-400">minutos</span>
                   </div>
@@ -401,19 +450,19 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           </div>
         }
 
-        <!-- 4. TRANSFERENCIAS (HISTÓRICO REAL DO BANCO) -->
+        <!-- 4. TRANSFERENCIAS -->
         @else if (abaAtiva === 'transferencias') {
           <div class="flex items-start justify-between flex-wrap gap-4">
             <div>
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">
                 Movimientos
               </p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Transferencias</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Transferencias</h1>
             </div>
             <div class="flex gap-2">
               <button
                 (click)="guardar()"
-                class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+                class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
               >
                 Guardar cambios
               </button>
@@ -421,7 +470,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div class="bg-white rounded-xl border border-gray-200/80 p-5 shadow-sm">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs">
               <h2 class="text-sm font-bold text-gray-900">Historial de transferencias reales</h2>
               <p class="text-xs text-gray-400 mb-4">Movimientos registrados en MySQL</p>
 
@@ -443,7 +492,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
             </div>
 
             <div
-              class="bg-white rounded-xl border border-gray-200/80 p-5 shadow-sm flex flex-col justify-between"
+              class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex flex-col justify-between"
             >
               <div>
                 <h2 class="text-sm font-bold text-gray-900 mb-3">Regla de transferencia</h2>
@@ -475,12 +524,12 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           </div>
         }
 
-        <!-- 5. ALERTAS Y SLA (CONECTADA DIRETO AO BACKEND /api/configuracoes/sla) -->
+        <!-- 5. ALERTAS Y SLA -->
         @else if (abaAtiva === 'sla') {
           <div class="flex items-start justify-between flex-wrap gap-4">
             <div>
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Servicio</p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Alertas y SLA</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Alertas y SLA</h1>
               <p class="text-xs text-gray-500 mt-1">
                 Tiempo límite real que ejecuta el motor SlaMonitorService en Railway.
               </p>
@@ -488,14 +537,14 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
             <div class="flex gap-2">
               <button
                 (click)="descartar()"
-                class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700"
+                class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700"
               >
                 Descartar
               </button>
               <button
                 (click)="guardar()"
                 [disabled]="salvando"
-                class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-xl text-xs font-bold disabled:opacity-50"
               >
                 {{ salvando ? 'Guardando...' : 'Guardar cambios' }}
               </button>
@@ -504,7 +553,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
 
           <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 mt-6">
             <div
-              class="bg-white rounded-xl border border-gray-200/80 p-5 shadow-sm flex flex-col gap-4"
+              class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex flex-col gap-4"
             >
               <h2 class="text-sm font-bold text-gray-900">Tiempos límite</h2>
 
@@ -518,7 +567,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                     [(ngModel)]="regras.tempoLimiteMinutos"
                     min="1"
                     max="1440"
-                    class="border border-gray-200 rounded-lg px-3.5 py-2 w-full font-bold font-mono text-sm focus:outline-none focus:border-green-700"
+                    class="border border-gray-200 rounded-xl px-3.5 py-2 w-full font-bold font-mono text-sm focus:outline-none focus:border-green-700"
                   />
                   <span class="text-xs text-gray-400 shrink-0">minutos</span>
                 </div>
@@ -536,7 +585,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   <input
                     type="number"
                     [(ngModel)]="regras.primeiraRespostaMinutos"
-                    class="border border-gray-200 rounded-lg px-3.5 py-2 w-full font-bold font-mono text-sm"
+                    class="border border-gray-200 rounded-xl px-3.5 py-2 w-full font-bold font-mono text-sm"
                   />
                   <span class="text-xs text-gray-400 shrink-0">minutos</span>
                 </div>
@@ -550,7 +599,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   <input
                     type="number"
                     [(ngModel)]="regras.ociosidadeMinutos"
-                    class="border border-gray-200 rounded-lg px-3.5 py-2 w-full font-bold font-mono text-sm"
+                    class="border border-gray-200 rounded-xl px-3.5 py-2 w-full font-bold font-mono text-sm"
                   />
                   <span class="text-xs text-gray-400 shrink-0">minutos</span>
                 </div>
@@ -564,26 +613,26 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   <input
                     type="number"
                     [(ngModel)]="regras.toleranciaForaExpedienteMinutos"
-                    class="border border-gray-200 rounded-lg px-3.5 py-2 w-full font-bold font-mono text-sm"
+                    class="border border-gray-200 rounded-xl px-3.5 py-2 w-full font-bold font-mono text-sm"
                   />
                   <span class="text-xs text-gray-400 shrink-0">minutos</span>
                 </div>
               </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200/80 p-5 shadow-sm h-fit">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs h-fit">
               <p class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-3">
                 Vista previa del indicador
               </p>
               <div class="flex flex-col gap-2 text-xs">
-                <div class="p-2.5 bg-gray-50 rounded-lg flex items-center justify-between">
+                <div class="p-2.5 bg-gray-50 rounded-xl flex items-center justify-between">
                   <span class="font-bold text-gray-800">0 – {{ metadeSla }} min</span>
                   <span
                     class="px-2 py-0.5 bg-gray-200/70 text-gray-700 text-[10px] font-semibold rounded"
                     >En objetivo</span
                   >
                 </div>
-                <div class="p-2.5 bg-gray-50 rounded-lg flex items-center justify-between">
+                <div class="p-2.5 bg-gray-50 rounded-xl flex items-center justify-between">
                   <span class="font-bold text-gray-800"
                     >{{ metadeSla }} – {{ regras.tempoLimiteMinutos }} min</span
                   >
@@ -591,7 +640,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                     >En riesgo</span
                   >
                 </div>
-                <div class="p-2.5 bg-gray-50 rounded-lg flex items-center justify-between">
+                <div class="p-2.5 bg-gray-50 rounded-xl flex items-center justify-between">
                   <span class="font-bold text-gray-800">+{{ regras.tempoLimiteMinutos }} min</span>
                   <span class="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded"
                     >SLA excedido</span
@@ -609,17 +658,17 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">
                 Expediente
               </p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Horario de atención</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Horario de atención</h1>
             </div>
             <button
               (click)="guardar()"
-              class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+              class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
             >
               Guardar cambios
             </button>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200/80 p-5 mt-6 shadow-sm">
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-5 mt-6 shadow-xs">
             <h2 class="text-sm font-bold text-gray-900 mb-4">Expediente semanal</h2>
             <div class="divide-y divide-gray-50">
               @for (d of expedienteSemanal; track d.dia) {
@@ -643,14 +692,14 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                       type="text"
                       [(ngModel)]="d.inicio"
                       [disabled]="!d.ativo"
-                      class="border border-gray-200 rounded-lg px-2.5 py-1.5 w-20 text-center font-mono"
+                      class="border border-gray-200 rounded-xl px-2.5 py-1.5 w-20 text-center font-mono"
                     />
                     <span class="text-gray-400">a</span>
                     <input
                       type="text"
                       [(ngModel)]="d.fim"
                       [disabled]="!d.ativo"
-                      class="border border-gray-200 rounded-lg px-2.5 py-1.5 w-20 text-center font-mono"
+                      class="border border-gray-200 rounded-xl px-2.5 py-1.5 w-20 text-center font-mono"
                     />
                   </div>
                 </div>
@@ -659,18 +708,21 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           </div>
         }
 
-        <!-- 7. MENSAJES AUTOMÁTICOS -->
+        <!-- 7. MENSAJES AUTOMÁTICOS (CONECTADOS AO MYSQL) -->
         @else if (abaAtiva === 'mensajes') {
           <div class="flex items-start justify-between flex-wrap gap-4">
             <div>
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">
                 Automatización
               </p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Mensajes automáticos</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Mensajes automáticos</h1>
+              <p class="text-xs text-gray-500 mt-1">
+                Textos reales que envía el Bot de WhatsApp y se guardan en MySQL.
+              </p>
             </div>
             <button
               (click)="guardar()"
-              class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+              class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
             >
               Guardar cambios
             </button>
@@ -678,7 +730,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
 
           <div class="flex flex-col gap-4 mt-6">
             @for (m of mensajesAutomaticos; track m.id) {
-              <div class="bg-white rounded-xl border border-gray-200/80 p-5 shadow-sm">
+              <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs">
                 <div class="flex items-center justify-between mb-1">
                   <div class="flex items-center gap-2">
                     <h3 class="text-xs font-bold text-gray-900">{{ m.titulo }}</h3>
@@ -701,9 +753,9 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                 </div>
                 <p class="text-[11px] text-gray-400 mb-3">{{ m.desc }}</p>
                 <textarea
-                  rows="2"
+                  rows="3"
                   [(ngModel)]="m.texto"
-                  class="w-full border border-gray-200 rounded-lg p-3 text-xs"
+                  class="w-full border border-gray-200 rounded-xl p-3 text-xs focus:outline-none focus:border-green-700"
                 ></textarea>
                 <div class="flex gap-2 mt-2">
                   @for (v of m.vars; track v) {
@@ -728,17 +780,17 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">
                 Tabulación
               </p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Tags y cierres</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Tags y cierres</h1>
             </div>
             <button
               (click)="guardar()"
-              class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+              class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
             >
               Guardar cambios
             </button>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200/80 p-5 mt-6 shadow-sm">
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-5 mt-6 shadow-xs">
             <h2 class="text-sm font-bold text-gray-900">
               Motivos de cierre disponibles para el vendedor
             </h2>
@@ -748,11 +800,11 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                 [(ngModel)]="novoMotivo"
                 (keyup.enter)="adicionarMotivo()"
                 placeholder="Nuevo motivo de cierre"
-                class="flex-1 border border-gray-200 rounded-lg px-3.5 py-2 text-xs"
+                class="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-xs"
               />
               <button
                 (click)="adicionarMotivo()"
-                class="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg"
+                class="px-4 py-2 bg-[#0a3a2a] text-white text-xs font-bold rounded-xl"
               >
                 Agregar
               </button>
@@ -760,7 +812,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
             <div class="flex flex-wrap gap-2">
               @for (m of regras.motivosCierre; track m) {
                 <span
-                  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-900 text-xs font-semibold"
+                  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-50 border border-green-200 text-green-900 text-xs font-semibold"
                 >
                   {{ m }}
                   <button
@@ -780,17 +832,17 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
           <div class="flex items-start justify-between flex-wrap gap-4">
             <div>
               <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Avisos</p>
-              <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Notificaciones</h1>
+              <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Notificaciones</h1>
             </div>
             <button
               (click)="guardar()"
-              class="px-4 py-2 bg-green-700 text-white rounded-lg text-xs font-bold"
+              class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold"
             >
               Guardar cambios
             </button>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200/80 mt-6 shadow-sm overflow-hidden">
+          <div class="bg-white rounded-2xl border border-gray-200/80 mt-6 shadow-xs overflow-hidden">
             @for (n of notificacionesEventos; track n.titulo) {
               <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                 <div>
@@ -817,21 +869,21 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
         @else if (abaAtiva === 'auditoria') {
           <div>
             <p class="text-[11px] font-bold tracking-widest text-green-700 uppercase">Auditoría</p>
-            <h1 class="text-2xl font-bold text-gray-900 mt-0.5">Auditoría (logs reales)</h1>
+            <h1 class="text-2xl font-extrabold text-gray-900 mt-0.5">Auditoría (logs reales)</h1>
             <p class="text-xs text-gray-500 mt-1">
               Eventos registrados en la tabla audit_logs y en el historial de atenciones.
             </p>
           </div>
 
-          <div class="flex gap-2 mt-5 flex-wrap">
+          <div class="flex gap-2 mt-5 overflow-x-auto pb-1 no-scrollbar">
             <button
               (click)="filtroAuditoria = 'TODOS'"
               [ngClass]="
                 filtroAuditoria === 'TODOS'
-                  ? 'border-green-700 bg-green-50 text-green-800 font-bold'
+                  ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold'
                   : 'border-gray-200 bg-white text-gray-600'
               "
-              class="px-3.5 py-1.5 text-xs rounded-lg border"
+              class="px-3.5 py-1.5 text-xs rounded-xl border whitespace-nowrap"
             >
               Todos
             </button>
@@ -839,10 +891,10 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               (click)="filtroAuditoria = 'TRANSFERENCIAS'"
               [ngClass]="
                 filtroAuditoria === 'TRANSFERENCIAS'
-                  ? 'border-green-700 bg-green-50 text-green-800 font-bold'
+                  ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold'
                   : 'border-gray-200 bg-white text-gray-600'
               "
-              class="px-3.5 py-1.5 text-xs rounded-lg border"
+              class="px-3.5 py-1.5 text-xs rounded-xl border whitespace-nowrap"
             >
               Transferencias
             </button>
@@ -850,10 +902,10 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               (click)="filtroAuditoria = 'CIERRES'"
               [ngClass]="
                 filtroAuditoria === 'CIERRES'
-                  ? 'border-green-700 bg-green-50 text-green-800 font-bold'
+                  ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold'
                   : 'border-gray-200 bg-white text-gray-600'
               "
-              class="px-3.5 py-1.5 text-xs rounded-lg border"
+              class="px-3.5 py-1.5 text-xs rounded-xl border whitespace-nowrap"
             >
               Cierres
             </button>
@@ -861,61 +913,83 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
               (click)="filtroAuditoria = 'ACCESOS'"
               [ngClass]="
                 filtroAuditoria === 'ACCESOS'
-                  ? 'border-green-700 bg-green-50 text-green-800 font-bold'
+                  ? 'border-[#0a3a2a] bg-[#0a3a2a] text-white font-bold'
                   : 'border-gray-200 bg-white text-gray-600'
               "
-              class="px-3.5 py-1.5 text-xs rounded-lg border"
+              class="px-3.5 py-1.5 text-xs rounded-xl border whitespace-nowrap"
             >
               Usuarios y Accesos
             </button>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200/80 mt-4 shadow-sm overflow-x-auto">
-            @if (logsFiltrados.length === 0) {
-              <div class="p-8 text-center text-xs text-gray-400">
-                Ningún evento registrado en esta categoría todavía.
+          @if (logsFiltrados.length === 0) {
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-8 mt-4 text-center text-xs text-gray-400">
+              Ningún evento registrado en esta categoría todavía.
+            </div>
+          } @else {
+            <!-- Desktop Table -->
+            <div class="hidden md:block bg-white rounded-2xl border border-gray-200/80 mt-4 shadow-xs overflow-hidden">
+              <div
+                class="grid grid-cols-[80px_170px_160px_1fr] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100 bg-gray-50/50"
+              >
+                <span>Hora</span>
+                <span>Evento</span>
+                <span>Usuario</span>
+                <span>Detalle</span>
               </div>
-            } @else {
-              <div class="min-w-[620px]">
-                <div
-                  class="grid grid-cols-[80px_170px_160px_1fr] gap-x-4 text-[10px] font-bold text-gray-400 uppercase px-5 py-3 border-b border-gray-100"
-                >
-                  <span>Hora</span>
-                  <span>Evento</span>
-                  <span>Usuario</span>
-                  <span>Detalle</span>
-                </div>
 
-                @for (l of logsFiltrados; track $index) {
-                  <div
-                    class="grid grid-cols-[80px_170px_160px_1fr] gap-x-4 items-center px-5 py-3.5 border-b border-gray-50 text-xs"
-                  >
-                    <span class="font-mono text-gray-500">{{ l.hora }}</span>
-                    <div>
-                      <span
-                        class="px-2 py-0.5 text-[10px] font-bold rounded"
-                        [ngClass]="
-                          l.tipo === 'TRANSFERENCIAS'
-                            ? 'bg-amber-50 text-amber-800'
-                            : 'bg-green-50 text-green-800'
-                        "
-                      >
-                        {{ l.evento }}
-                      </span>
-                    </div>
-                    <span class="font-bold text-gray-900">{{ l.usuario }}</span>
-                    <span class="text-gray-600">{{ l.detalhe }}</span>
+              @for (l of logsFiltrados; track $index) {
+                <div
+                  class="grid grid-cols-[80px_170px_160px_1fr] gap-x-4 items-center px-5 py-3.5 border-b border-gray-50 text-xs"
+                >
+                  <span class="font-mono text-gray-500">{{ l.hora }}</span>
+                  <div>
+                    <span
+                      class="px-2 py-0.5 text-[10px] font-bold rounded"
+                      [ngClass]="
+                        l.tipo === 'TRANSFERENCIAS'
+                          ? 'bg-amber-50 text-amber-800'
+                          : 'bg-green-50 text-green-800'
+                      "
+                    >
+                      {{ l.evento }}
+                    </span>
                   </div>
-                }
-              </div>
-            }
-          </div>
+                  <span class="font-bold text-gray-900">{{ l.usuario }}</span>
+                  <span class="text-gray-600">{{ l.detalhe }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden flex flex-col gap-2.5 mt-4">
+              @for (l of logsFiltrados; track $index) {
+                <div class="bg-white rounded-xl border border-gray-200/80 p-3.5 shadow-2xs flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between">
+                    <span
+                      class="px-2 py-0.5 text-[10px] font-bold rounded"
+                      [ngClass]="
+                        l.tipo === 'TRANSFERENCIAS'
+                          ? 'bg-amber-50 text-amber-800'
+                          : 'bg-green-50 text-green-800'
+                      "
+                    >
+                      {{ l.evento }}
+                    </span>
+                    <span class="font-mono text-[11px] text-gray-400">{{ l.hora }}</span>
+                  </div>
+                  <p class="text-xs font-bold text-gray-900">👤 {{ l.usuario }}</p>
+                  <p class="text-xs text-gray-600">{{ l.detalhe }}</p>
+                </div>
+              }
+            </div>
+          }
         }
       </div>
 
-      <!-- MODAL: NUEVO USUARIO (CRIA VENDEDOR REAL NO MYSQL) -->
+      <!-- MODAL: NUEVO USUARIO -->
       @if (modalNovoUsuarioAberto) {
-        <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <h3 class="text-base font-bold text-gray-900">Nuevo usuario</h3>
             <p class="text-xs text-gray-500 mt-1">
@@ -930,7 +1004,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   type="text"
                   [(ngModel)]="novoNome"
                   placeholder="Ej: Rafael De Felice"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2"
                 />
               </div>
 
@@ -940,7 +1014,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   type="email"
                   [(ngModel)]="novoEmail"
                   placeholder="rafael@centroagricola.com.py"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2"
                 />
               </div>
 
@@ -950,7 +1024,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   type="password"
                   [(ngModel)]="novaSenha"
                   placeholder="Mínimo 6 caracteres"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2"
                 />
               </div>
 
@@ -959,7 +1033,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   <label class="font-bold text-gray-700 block mb-1">Sector</label>
                   <select
                     [(ngModel)]="novoSetor"
-                    class="w-full border border-gray-200 rounded-lg px-3 py-2"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2"
                   >
                     <option value="Minorista">Minorista (Varejo)</option>
                     <option value="Mayorista">Mayorista (Atacado)</option>
@@ -970,7 +1044,7 @@ import { ConfiguracaoService, RegrasOperacionais } from '../../../../configuraca
                   <label class="font-bold text-gray-700 block mb-1">Perfil</label>
                   <select
                     [(ngModel)]="novoPerfil"
-                    class="w-full border border-gray-200 rounded-lg px-3 py-2"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2"
                   >
                     <option value="VENDEDOR">Vendedor</option>
                     <option value="ADMIN">Administrador</option>
@@ -1018,7 +1092,6 @@ export class AdminConfiguracionComponent implements OnInit {
   regras: RegrasOperacionais = { ...this.configService.regrasAtuais };
   novoMotivo = '';
 
-  // Modal Novo Usuário
   modalNovoUsuarioAberto = false;
   novoNome = '';
   novoEmail = '';
@@ -1084,22 +1157,22 @@ export class AdminConfiguracionComponent implements OnInit {
   mensajesAutomaticos = [
     {
       id: 'saludo',
-      titulo: 'Saludo inicial',
+      titulo: 'Saludo inicial (Menú Bot)',
       badge: 'PRIMER CONTACTO',
-      desc: 'Se envía cuando un número escribe por primera vez en el día.',
+      desc: 'Se envía cuando un número escribe por primera vez sin Sticky Session.',
       ativo: true,
       texto:
-        '¡Hola {{cliente}}! Gracias por escribir a Centro Agrícola. En un momento un asesor te va a atender.',
+        '¡Hola! Bienvenido a Centro Agrícola. 🌾\nPor favor, elegí una opción:\n\n1 - Mayorista (Atacado)\n2 - Minorista (Varejo)',
       vars: ['{{cliente}}', '{{empresa}}'],
     },
     {
       id: 'asignacion',
       titulo: 'Confirmación de asignación',
       badge: 'AL ASIGNAR',
-      desc: 'Avisa al cliente quién va a atenderlo.',
+      desc: 'Avisa al cliente qué vendedor lo va a atender.',
       ativo: true,
       texto:
-        'Te va a atender {{vendedor}}, de nuestro equipo de {{sector}}. Ya puede ver tu mensaje.',
+        '✅ ¡Todo listo! Te va a atender {{vendedor}}, de nuestro equipo de {{sector}}. En breve te responde.',
       vars: ['{{vendedor}}', '{{sector}}'],
     },
   ];
@@ -1138,6 +1211,15 @@ export class AdminConfiguracionComponent implements OnInit {
 
     this.configService.regras$.subscribe((r) => {
       this.regras = { ...r, motivosCierre: [...r.motivosCierre] };
+      const pTransf = this.permisosLista.find((p) => p.chave === 'transferir');
+      const pCerrar = this.permisosLista.find((p) => p.chave === 'cerrar');
+      if (pTransf) pTransf.vendedor = r.vendedorPodeTransferir;
+      if (pCerrar) pCerrar.vendedor = r.vendedorPodeFechar;
+
+      if (r.msgSaludoInicial) this.mensajesAutomaticos[0].texto = r.msgSaludoInicial;
+      if (r.msgConfirmacionAsignacion) {
+        this.mensajesAutomaticos[1].texto = r.msgConfirmacionAsignacion;
+      }
       this.cdr.detectChanges();
     });
 
@@ -1162,8 +1244,6 @@ export class AdminConfiguracionComponent implements OnInit {
       this.cdr.detectChanges();
     });
   }
-
-  // --- GESTÃO DE USUÁRIOS REAIS ---
 
   abrirModalNovoUsuario() {
     this.novoNome = '';
@@ -1219,8 +1299,6 @@ export class AdminConfiguracionComponent implements OnInit {
     });
   }
 
-  // --- SALVAR CONFIGURAÇÕES E SLA ---
-
   adicionarMotivo() {
     const limpo = this.novoMotivo.trim();
     if (limpo && !this.regras.motivosCierre.includes(limpo)) {
@@ -1246,11 +1324,13 @@ export class AdminConfiguracionComponent implements OnInit {
     const pCerrar = this.permisosLista.find((p) => p.chave === 'cerrar');
     this.regras.vendedorPodeTransferir = pTransf ? pTransf.vendedor : true;
     this.regras.vendedorPodeFechar = pCerrar ? pCerrar.vendedor : true;
+    this.regras.msgSaludoInicial = this.mensajesAutomaticos[0].texto;
+    this.regras.msgConfirmacionAsignacion = this.mensajesAutomaticos[1].texto;
 
     this.configService.salvarSlaNoServidor(this.regras).subscribe({
       next: () => {
         this.salvando = false;
-        this.exibirSucesso('Configuración y SLA guardados en MySQL.');
+        this.exibirSucesso('Configuración, permisos y textos del Bot guardados en MySQL.');
       },
       error: () => {
         this.salvando = false;
